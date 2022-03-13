@@ -1,18 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "hash_table.h"
+#include "every_define.h"
 
 char *infile;
 char *outfile;
 FILE *infd, *outfd;
+ht* map;
 
 int main(int argc, char** argv)
 {
 int i;
 infile = NULL;
 infd = stdin;
-outfile = (char *) malloc(6 * sizeof(char));
-strcpy(outfile, "a.out");
+outfd = stdout;
+outfile = NULL;
+map = ht_create();
 for (i = 1; i < argc; i++) {
 	if (argv[i][0] == '-') {
 		if (argv[i][1] == 'D') {
@@ -28,16 +32,13 @@ for (i = 1; i < argc; i++) {
 		}
 	} else {
 		if (infile == NULL) {
-			int len = strlen(argv[i]);
-
-			infile = (char *) malloc((len + 1) * sizeof(char));
+			infile = (char *) malloc((strlen(argv[i]) + 1) * sizeof(char));
 			strcpy(infile, argv[i]);
 			infd = fopen(infile, "r");
 			if (infd == NULL)
 				return 1;
 		} else {
-			if (strcmp(outfile, "a.out") == 0) {
-				free(outfile);
+			if (outfile == NULL) {
 				outfile = (char *) malloc((strlen(argv[i]) + 1) * sizeof(char));
 				strcpy(outfile, argv[i]);
 				outfd = fopen(outfile, "w+");
@@ -55,9 +56,31 @@ for (i = 1; i < argc; i++) {
 char buf[256];
 
 while (fgets(buf, 256, infd)) {
-	printf("%s", buf);
+	if(buf[0] == '#'){
+		if(strncmp(buf + 1, "define", 6) == 0){
+			insert_define_from_file(map, buf + 7, infd);
+		}
+	}
+	else{
+		if(strlen(buf) == 1 && buf[0] == '\n');
+		else
+			printf("%s", buf);
+	}
 }
 
+//printf("%s\n", ht_get(map, "VAR0"));
+
+
+if (infile != NULL) {
+	free(infile);
+	fclose(infd);
+}
+if (outfile != NULL) {
+	free(outfile);
+	fclose(outfd);
+}
+
+ht_destroy(map);
 
 return 0;
 }

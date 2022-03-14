@@ -4,17 +4,21 @@
 #include <stdlib.h>
 
 void insert_define_from_file(ht* tabel, char* buf, FILE* infd){
-    char* argumente = (char *)malloc((strlen(buf) + 1) * sizeof(char));
+    char* argumente;
+	char *aux;
+	char *key;
+	argumente = (char *)malloc((strlen(buf) + 1) * sizeof(char));
 	strcpy(argumente, buf);
-	char *aux = strtok(argumente, " \n");
-	char *key = (char *) malloc((strlen(aux) + 1) * sizeof(char));
+	aux = strtok(argumente, " \n");
+	key = (char *) malloc((strlen(aux) + 1) * sizeof(char));
 	strcpy(key, aux);
 	aux = strtok(NULL, "\n");
 	if (aux[strlen(aux) - 1] == '\\'){
-	    char* argumente_concatenate = (char *)malloc(250 * sizeof(char));
+	    char* argumente_concatenate;
+		int i;
+		argumente_concatenate = (char *)malloc(250 * sizeof(char));
 		strcat(argumente_concatenate, aux);
 		argumente_concatenate[strlen(argumente_concatenate) - 1] = '\0';
-		int i;
 		for (i = strlen(argumente_concatenate) - 1 ; i >= 0 && (argumente_concatenate[i] == ' ' || argumente_concatenate[i] == '\t'); i--)
 			argumente_concatenate[i] = '\0';
 		fgets(buf, 256, infd);

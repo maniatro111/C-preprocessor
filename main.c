@@ -12,10 +12,12 @@ ht* map;
 int main(int argc, char** argv)
 {
 int i;
+char buf[256];
 infile = NULL;
 infd = stdin;
 outfd = stdout;
 outfile = NULL;
+
 map = ht_create();
 for (i = 1; i < argc; i++) {
 	if (argv[i][0] == '-') {
@@ -50,10 +52,6 @@ for (i = 1; i < argc; i++) {
 		}
 	}
 }
-
-
-
-char buf[256];
 
 while (fgets(buf, 256, infd)) {
 	if(buf[0] == '#'){

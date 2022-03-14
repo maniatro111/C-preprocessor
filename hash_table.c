@@ -17,9 +17,10 @@ typedef struct {
 
 #define INITIAL_CAPACITY 1000  // must not be zero
 
-ht* ht_create() {
+ht* ht_create(void) {
     // Allocate space for hash table struct.
-    ht* table = (ht *)malloc(sizeof(ht));
+    ht* table;
+	table = (ht *)malloc(sizeof(ht));
     if (table == NULL) {
         return NULL;
     }
@@ -37,7 +38,8 @@ ht* ht_create() {
 
 void ht_destroy(ht* table) {
     // First free allocated keys.
-    for (size_t i = 0; i < table->capacity; i++) {
+	size_t i;
+    for (i = 0; i < table->capacity; i++) {
         if (table->entries[i].key != NULL) {
             free(table->entries[i].key);
             free(table->entries[i].value);
@@ -49,15 +51,16 @@ void ht_destroy(ht* table) {
     free(table);
 }
 
-#define FNV_OFFSET 14695981039346656037UL
-#define FNV_PRIME 1099511628211UL
+#define FNV_OFFSET 2166136261UL
+#define FNV_PRIME 16777619UL
 
 // Return 64-bit FNV-1a hash for key (NUL-terminated). See description:
 // https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function
-static u_int64_t hash_key(char* key) {
-    u_int64_t hash = FNV_OFFSET;
-    for (char* p = key; *p; p++) {
-        hash ^= (u_int64_t)(unsigned char)(*p);
+static unsigned int hash_key(char* key) {
+    unsigned int hash = FNV_OFFSET;
+	char *p;
+    for (p = key; *p; p++) {
+        hash ^= (unsigned int)(unsigned char)(*p);
         hash *= FNV_PRIME;
     }
     return hash;
@@ -65,8 +68,8 @@ static u_int64_t hash_key(char* key) {
 
 char* ht_get(ht* table, char* key) {
     // AND hash with capacity-1 to ensure it's within entries array.
-    u_int64_t hash = hash_key(key);
-    size_t index = (size_t)(hash & (u_int64_t)(table->capacity - 1));
+    unsigned int hash = hash_key(key);
+    size_t index = (size_t)(hash & (unsigned int)(table->capacity - 1));
 
     // Loop till we find an empty entry.
     while (table->entries[index].key != NULL) {
@@ -88,8 +91,8 @@ char* ht_get(ht* table, char* key) {
 static char* ht_set_entry(ht_entry* entries, size_t capacity,
         char* key, char* value, size_t* plength) {
     // AND hash with capacity-1 to ensure it's within entries array.
-    u_int64_t hash = hash_key(key);
-    size_t index = (size_t)(hash & (u_int64_t)(capacity - 1));
+    unsigned int hash = hash_key(key);
+    size_t index = (size_t)(hash & (unsigned int)(capacity - 1));
 
     // Loop till we find an empty entry.
     while (entries[index].key != NULL) {
@@ -117,8 +120,6 @@ static char* ht_set_entry(ht_entry* entries, size_t capacity,
         }
         (*plength)++;
     }
-    //entries[index].key = (char*)key;
-    //entries[index].value = value;
     entries[index].value = (char *) malloc((strlen(value) + 1) * sizeof(char));
     strcpy(entries[index].value, value);
     return key;
@@ -128,17 +129,19 @@ static char* ht_set_entry(ht_entry* entries, size_t capacity,
 // false if out of memory.
 static int ht_expand(ht* table) {
     // Allocate new entries array.
+	size_t i;
+	ht_entry* new_entries;
     size_t new_capacity = table->capacity * 2;
     if (new_capacity < table->capacity) {
         return 0;  // overflow (capacity would be too big)
     }
-    ht_entry* new_entries = calloc(new_capacity, sizeof(ht_entry));
+	new_entries = calloc(new_capacity, sizeof(ht_entry));
     if (new_entries == NULL) {
         return 0;
     }
 
     // Iterate entries, move all non-empty ones to new table's entries.
-    for (size_t i = 0; i < table->capacity; i++) {
+    for (i = 0; i < table->capacity; i++) {
         ht_entry entry = table->entries[i];
         if (entry.key != NULL) {
             ht_set_entry(new_entries, new_capacity, entry.key,

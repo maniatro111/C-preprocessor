@@ -20,6 +20,7 @@ outfile = NULL;
 
 map = ht_create();
 for (i = 1; i < argc; i++) {
+	//printf("%s\n", argv[i]);
 	if (argv[i][0] == '-') {
 		if (argv[i][1] == 'D') {
 			
@@ -40,12 +41,15 @@ for (i = 1; i < argc; i++) {
 			if (infd == NULL)
 				return 1;
 		} else {
+			//printf("Am intrat aici!\n");
 			if (outfile == NULL) {
 				outfile = (char *) malloc((strlen(argv[i]) + 1) * sizeof(char));
 				strcpy(outfile, argv[i]);
+				//printf("%s\n", argv[i]);
 				outfd = fopen(outfile, "w+");
-				if (outfd == NULL)
+				if (outfd == NULL){
 					return 1;
+				}
 				} else {
 					return 1;
 			}
@@ -62,7 +66,7 @@ while (fgets(buf, 256, infd)) {
 	else{
 		if(strlen(buf) == 1 && buf[0] == '\n');
 		else
-			printf("%s", buf);
+			fprintf(outfd, "%s", buf);
 	}
 }
 

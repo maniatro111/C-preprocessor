@@ -38,7 +38,11 @@ int main(int argc, char **argv)
 				if (strchr(argv[i], '=') != NULL)
 				{
 					char *aux;
+					// char values[256];
 					aux = strtok(argv[i], "=");
+					// strcpy(values, argv[i] + 1 + strlen(argv[i]));
+					// aux = strtok(argv[i] + 1 + strlen(argv[i]), " ");
+					// printf("%s\n", aux);
 					ht_set(map, argv[i], argv[i] + strlen(argv[i]) + 1);
 				}
 				else
@@ -87,14 +91,14 @@ int main(int argc, char **argv)
 		}
 	}
 
-	int j;
+	/*int j;
 	for (j = 0; j < (int)map->capacity; j++)
 		if (map->entries[j].key != NULL)
 		{
 			printf("%s %s\n", map->entries[j].key, map->entries[j].value);
-			// printf("%s\n", ht_get(map, map->entries[j].key));
+			//  printf("%s\n", ht_get(map, map->entries[j].key));
 		}
-
+*/
 	while (fgets(buf, 256, infd))
 	{
 		if (buf[0] == '#')
@@ -109,7 +113,53 @@ int main(int argc, char **argv)
 			if (strlen(buf) == 1 && buf[0] == '\n')
 				;
 			else
+			{
+				int *v;
+				int n;
+				// printf("%s", buf);
+				get_apostrophes(buf, &v, &n);
+				int j;
+				for (j = 0; j < (int)map->capacity; j++)
+					if (map->entries[j].key != NULL)
+					{
+						// printf("%s %s\n", map->entries[j].key, map->entries[j].value);
+						//   printf("%s\n", ht_get(map, map->entries[j].key));
+
+						if (strstr(buf, map->entries[j].key))
+						{
+							// printf("NICE");
+							int pos = strstr(buf, map->entries[j].key) - buf;
+							if (n && check_not_in_between(pos, n, v))
+							{
+
+								char *aux;
+								aux = (char *)malloc(256 * sizeof(char));
+								strcpy(aux, buf);
+								strncpy(buf, aux, pos);
+								strcpy(buf + pos, map->entries[j].value);
+								strcpy(buf + pos + strlen(map->entries[j].value), aux + pos + strlen(map->entries[j].key));
+							}
+							while (strstr(buf + pos + strlen(map->entries[j].key), map->entries[j].key))
+							{
+								pos = strstr(buf + pos + strlen(map->entries[j].key), map->entries[j].key) - buf;
+								if (n && check_not_in_between(pos, n, v))
+								{
+
+									char *aux;
+									aux = (char *)malloc(256 * sizeof(char));
+									strcpy(aux, buf);
+									strncpy(buf, aux, pos);
+									strcpy(buf + pos, map->entries[j].value);
+									strcpy(buf + pos + strlen(map->entries[j].value), aux + pos + strlen(map->entries[j].key));
+								}
+							}
+						}
+					}
+				// for (int i = 0; i < n; i++)
+				//	printf("%d\n", v[i]);
+
 				fprintf(outfd, "%s", buf);
+			}
 		}
 	}
 

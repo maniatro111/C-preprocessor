@@ -1,17 +1,15 @@
 // Hash table structure: create with ht_create, free with ht_destroy.
 #include <stdio.h>
-typedef struct ht_entry
-{
-    char *key; // key is NULL if this slot is empty
-    char *value;
+typedef struct ht_entry {
+	char *key; // key is NULL if this slot is empty
+	char *value;
 } ht_entry;
 
 // Hash table structure: create with ht_create, free with ht_destroy.
-typedef struct ht
-{
-    ht_entry *entries; // hash slots
-    size_t capacity;   // size of _entries array
-    size_t length;     // number of items in hash table
+typedef struct ht {
+	ht_entry *entries; // hash slots
+	size_t capacity;   // size of _entries array
+	size_t length;	   // number of items in hash table
 } ht;
 
 // Create hash table and return pointer to it, or NULL if out of memory.
@@ -29,3 +27,5 @@ char *ht_get(ht *table, char *key);
 // allocated memory (keys are freed automatically when ht_destroy is
 // called). Return address of copied key, or NULL if out of memory.
 char *ht_set(ht *table, char *key, char *value);
+
+int delete_entry(ht *table, char *key);

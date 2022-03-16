@@ -1,31 +1,38 @@
+#ifndef HASH_TABLE
+#define HASH_TABLE 1
 #include "hash_table.h"
+#endif
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
-void insert_define_from_file(ht* tabel, char* buf, FILE* infd){
-    char* argumente;
+void insert_define_from_file(ht *tabel, char *buf, FILE *infd)
+{
+	char *argumente;
 	char *aux;
 	char *key;
 	argumente = (char *)malloc((strlen(buf) + 1) * sizeof(char));
 	strcpy(argumente, buf);
 	aux = strtok(argumente, " \n");
-	key = (char *) malloc((strlen(aux) + 1) * sizeof(char));
+	key = (char *)malloc((strlen(aux) + 1) * sizeof(char));
 	strcpy(key, aux);
 	aux = strtok(NULL, "\n");
-	if (aux[strlen(aux) - 1] == '\\'){
-	    char* argumente_concatenate;
+	if (aux[strlen(aux) - 1] == '\\')
+	{
+		char *argumente_concatenate;
 		int i;
 		argumente_concatenate = (char *)malloc(250 * sizeof(char));
 		strcat(argumente_concatenate, aux);
 		argumente_concatenate[strlen(argumente_concatenate) - 1] = '\0';
-		for (i = strlen(argumente_concatenate) - 1 ; i >= 0 && (argumente_concatenate[i] == ' ' || argumente_concatenate[i] == '\t'); i--)
+		for (i = strlen(argumente_concatenate) - 1; i >= 0 && (argumente_concatenate[i] == ' ' || argumente_concatenate[i] == '\t'); i--)
 			argumente_concatenate[i] = '\0';
 		fgets(buf, 256, infd);
 		buf[strlen(buf) - 1] = '\0';
-		while(buf[strlen(buf) - 1] == '\\'){
+		while (buf[strlen(buf) - 1] == '\\')
+		{
 			int i;
-			for(i = 0; i < strlen(buf) && (buf[i] == ' ' || buf[i] == '\t'); i++);
+			for (i = 0; i < strlen(buf) && (buf[i] == ' ' || buf[i] == '\t'); i++)
+				;
 			strcat(argumente_concatenate, " ");
 			strcat(argumente_concatenate, buf + i);
 			argumente_concatenate[strlen(argumente_concatenate) - 1] = '\0';
@@ -35,7 +42,7 @@ void insert_define_from_file(ht* tabel, char* buf, FILE* infd){
 			fgets(buf, 256, infd);
 			buf[strlen(buf) - 1] = '\0';
 		}
-	    ht_set(tabel, key, argumente_concatenate);
+		ht_set(tabel, key, argumente_concatenate);
 		free(argumente_concatenate);
 	}
 	else

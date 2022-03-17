@@ -8,9 +8,10 @@
 
 int check_not_in_between(int pos, int nr_el, int *vec)
 {
+	int i;
+	
 	if (!nr_el)
 		return 1;
-	int i;
 
 	for (i = 0; i < nr_el; i += 2)
 	{
@@ -57,7 +58,7 @@ static void check_define_in_define(ht *tabel, char *value)
 									 sizeof(char));
 				strcpy(aux, value);
 				strncpy(value, aux, i);
-				stpcpy(value + i, tabel->entries[j].value);
+				strcpy(value + i, tabel->entries[j].value);
 				strcpy(value + i +
 						   strlen(tabel->entries[j].value),
 					   aux + i + strlen(tabel->entries[j].key));
@@ -142,9 +143,9 @@ void analyze_and_print(ht *map, char *buf, FILE *outfd)
 {
 	int *v;
 	int n;
-
-	get_apostrophes(buf, &v, &n);
 	int j;
+	
+	get_apostrophes(buf, &v, &n);
 
 	for (j = 0; j < (int)map->capacity; j++)
 		if (map->entries[j].key != NULL && strstr(buf, map->entries[j].key))
@@ -201,9 +202,8 @@ static int turn_to_int_and_check(char *eval)
 
 int evaluate_if_condition(ht *map, char *key)
 {
-	// printf("%s", key);
-	key[strlen(key) - 1] = '\0';
 	char *aux;
+	key[strlen(key) - 1] = '\0';
 	aux = ht_get(map, key);
 	if (aux == NULL)
 		return turn_to_int_and_check(key);
@@ -212,5 +212,4 @@ int evaluate_if_condition(ht *map, char *key)
 		strcpy(key, aux);
 		return turn_to_int_and_check(key);
 	}
-	// printf("%s\n", key);
 }

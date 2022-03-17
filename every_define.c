@@ -127,3 +127,69 @@ void insert_define_from_file(ht *tabel, char *buf, FILE *infd)
 	free(key);
 	free(argumente);
 }
+
+void analyze_and_print(ht *map, char *buf, FILE *outfd)
+{
+	int *v;
+	int n;
+
+	get_apostrophes(buf, &v, &n);
+	int j;
+
+	for (j = 0; j < (int)map->capacity; j++)
+		if (map->entries[j].key != NULL) {
+			if (strstr(buf, map->entries[j].key)) {
+				int pos =
+				    strstr(buf, map->entries[j].key) - buf;
+				if (check_not_in_between(pos, n, v)) {
+					char *aux;
+
+					aux =
+					    (char *)malloc(256 * sizeof(char));
+					strcpy(aux, buf);
+					strncpy(buf, aux, pos);
+					strcpy(buf + pos,
+					       map->entries[j].value);
+					strcpy(
+					    buf + pos +
+						strlen(map->entries[j].value),
+					    aux + pos +
+						strlen(map->entries[j].key));
+					free(aux);
+				}
+				while (strstr(buf + pos +
+						  strlen(map->entries[j].key),
+					      map->entries[j].key)) {
+					pos =
+					    strstr(
+						buf + pos +
+						    strlen(map->entries[j].key),
+						map->entries[j].key) -
+					    buf;
+					if (check_not_in_between(pos, n, v)) {
+
+						char *aux;
+
+						aux = (char *)malloc(
+						    256 * sizeof(char));
+						strcpy(aux, buf);
+						strncpy(buf, aux, pos);
+						strcpy(buf + pos,
+						       map->entries[j].value);
+						strcpy(
+						    buf + pos +
+							strlen(map->entries[j]
+								   .value),
+						    aux + pos +
+							strlen(map->entries[j]
+								   .key));
+						free(aux);
+					}
+				}
+			}
+		}
+
+	fprintf(outfd, "%s", buf);
+	if (n)
+		free(v);
+}

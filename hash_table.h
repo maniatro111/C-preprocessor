@@ -13,7 +13,7 @@ typedef struct ht {
 } ht;
 
 // Create hash table and return pointer to it, or NULL if out of memory.
-ht *ht_create();
+ht *ht_create(void);
 
 // Free memory allocated for hash table, including allocated keys.
 void ht_destroy(ht *table);

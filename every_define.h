@@ -15,3 +15,5 @@ void analyze_and_print(ht *map, char *buf, FILE *outfd);
 void add_argument_mapping(char **argv, int *line, ht *map);
 
 int undefine_key(ht *map, char *key);
+
+int evaluate_if_condition(ht *map, char *key);

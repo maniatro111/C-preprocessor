@@ -188,3 +188,29 @@ int undefine_key(ht *map, char *key)
 	key[strlen(key) - 1] = '\0';
 	delete_entry(map, key + 7);
 }
+
+static int turn_to_int_and_check(char *eval)
+{
+	int a;
+	a = atoi(eval);
+	if (a == 0)
+		return 0;
+	else
+		return 1;
+}
+
+int evaluate_if_condition(ht *map, char *key)
+{
+	// printf("%s", key);
+	key[strlen(key) - 1] = '\0';
+	char *aux;
+	aux = ht_get(map, key);
+	if (aux == NULL)
+		return turn_to_int_and_check(key);
+	else
+	{
+		strcpy(key, aux);
+		return turn_to_int_and_check(key);
+	}
+	// printf("%s\n", key);
+}

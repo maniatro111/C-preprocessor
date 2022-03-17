@@ -73,6 +73,44 @@ int main(int argc, char **argv)
 				insert_define_from_file(map, buf + 8, infd);
 			else if (strncmp(buf + 1, "undef", 5) == 0)
 				undefine_key(map, buf);
+			else if (strncmp(buf + 1, "if", 2) == 0)
+			{
+				int result;
+				result = evaluate_if_condition(map, buf + 4);
+				if (result)
+				{
+					fgets(buf, 256, infd);
+					while (strncmp(buf, "#else", 5) && strncmp(buf, "#endif", 6))
+					{
+						analyze_and_print(map, buf, outfd);
+						fgets(buf, 256, infd);
+					}
+					if (strncmp(buf, "#else", 5) == 0)
+					{
+						while (strncmp(buf, "#endif", 6))
+						{
+							fgets(buf, 256, infd);
+						}
+					}
+				}
+				else
+				{
+					fgets(buf, 256, infd);
+					while (strncmp(buf, "#else", 5) && strncmp(buf, "#endif", 6))
+					{
+						fgets(buf, 256, infd);
+					}
+					if (strncmp(buf, "#else", 5) == 0)
+					{
+						fgets(buf, 256, infd);
+						while (strncmp(buf, "#endif", 6))
+						{
+							analyze_and_print(map, buf, outfd);
+							fgets(buf, 256, infd);
+						}
+					}
+				}
+			}
 		}
 		else if (strlen(buf) == 1 && buf[0] == '\n')
 			;

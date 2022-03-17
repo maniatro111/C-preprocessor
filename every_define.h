@@ -16,4 +16,8 @@ void add_argument_mapping(char **argv, int *line, ht *map);
 
 int undefine_key(ht *map, char *key);
 
+void solve_ifs(ht *map, char *buf, FILE *infd, FILE *outfd);
+
 int evaluate_if_condition(ht *map, char *key);
+
+int check_if_defined(ht *map, char *key);

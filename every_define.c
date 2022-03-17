@@ -9,7 +9,7 @@
 int check_not_in_between(int pos, int nr_el, int *vec)
 {
 	int i;
-	
+
 	if (!nr_el)
 		return 1;
 
@@ -144,7 +144,7 @@ void analyze_and_print(ht *map, char *buf, FILE *outfd)
 	int *v;
 	int n;
 	int j;
-	
+
 	get_apostrophes(buf, &v, &n);
 
 	for (j = 0; j < (int)map->capacity; j++)
@@ -187,7 +187,7 @@ void add_argument_mapping(char **argv, int *line, ht *map)
 int undefine_key(ht *map, char *key)
 {
 	key[strlen(key) - 1] = '\0';
-	delete_entry(map, key + 7);
+	delete_entry(map, key);
 }
 
 static int turn_to_int_and_check(char *eval)
@@ -213,3 +213,54 @@ int evaluate_if_condition(ht *map, char *key)
 		return turn_to_int_and_check(key);
 	}
 }
+
+int check_if_defined(ht *map, char *key)
+{
+	// printf("%s", key);
+	key[strlen(key) - 1] = '\0';
+	return macro_defined(map, key);
+}
+
+/*void solve_ifs(ht *map, char *buf, FILE *infd, FILE *outfd)
+{
+
+	int result;
+	result = evaluate_if_condition(map, buf);
+	if (result)
+	{
+		fgets(buf, 256, infd);
+		while (strncmp(buf, "#else", 5) && strncmp(buf, "#endif", 6))
+		{
+			analyze_and_print(map, buf, outfd);
+			fgets(buf, 256, infd);
+		}
+		if (strncmp(buf, "#else", 5) == 0)
+		{
+			while (strncmp(buf, "#endif", 6))
+			{
+				fgets(buf, 256, infd);
+			}
+		}
+	}
+	else
+	{
+		fgets(buf, 256, infd);
+		while (strncmp(buf, "#else", 5) && strncmp(buf, "#endif", 6) && strncmp(buf, "#elif", 5))
+		{
+			fgets(buf, 256, infd);
+		}
+		if (strncmp(buf, "#else", 5) == 0)
+		{
+			fgets(buf, 256, infd);
+			while (strncmp(buf, "#endif", 6))
+			{
+				analyze_and_print(map, buf, outfd);
+				fgets(buf, 256, infd);
+			}
+		}
+		else if (strncmp(buf, "#elif", 5) == 0)
+		{
+			solve_ifs(map, buf + 6, infd, outfd);
+		}
+	}
+}*/

@@ -22,7 +22,8 @@ ht *ht_create(void)
 
 	// Allocate (zero'd) space for entry buckets.
 	table->entries = (ht_entry *)calloc(table->capacity, sizeof(ht_entry));
-	if (table->entries == NULL) {
+	if (table->entries == NULL)
+	{
 		free(table); // error, free table before we return!
 		return NULL;
 	}
@@ -34,8 +35,10 @@ void ht_destroy(ht *table)
 	// First free allocated keys.
 	size_t i;
 
-	for (i = 0; i < table->capacity; i++) {
-		if (table->entries[i].key != NULL) {
+	for (i = 0; i < table->capacity; i++)
+	{
+		if (table->entries[i].key != NULL)
+		{
 			free(table->entries[i].key);
 			free(table->entries[i].value);
 		}
@@ -56,7 +59,8 @@ static unsigned int hash_key(char *key)
 	unsigned int hash = FNV_OFFSET;
 	char *p;
 
-	for (p = key; *p; p++) {
+	for (p = key; *p; p++)
+	{
 		hash ^= (unsigned int)(unsigned char)(*p);
 		hash *= FNV_PRIME;
 	}
@@ -69,7 +73,8 @@ int delete_entry(ht *table, char *key)
 	size_t index = (size_t)(hash & (unsigned int)(table->capacity - 1));
 
 	if (table->entries[index].key != NULL &&
-	    strcmp(table->entries[index].key, key) == 0) {
+		strcmp(table->entries[index].key, key) == 0)
+	{
 		free(table->entries[index].key);
 		free(table->entries[index].value);
 		table->entries[index].key = NULL;
@@ -84,14 +89,17 @@ char *ht_get(ht *table, char *key)
 	size_t index = (size_t)(hash & (unsigned int)(table->capacity - 1));
 
 	// Loop till we find an empty entry.
-	while (table->entries[index].key != NULL) {
-		if (strcmp(key, table->entries[index].key) == 0) {
+	while (table->entries[index].key != NULL)
+	{
+		if (strcmp(key, table->entries[index].key) == 0)
+		{
 			// Found key, return value.
 			return table->entries[index].value;
 		}
 		// Key wasn't in this slot, move to next (linear probing).
 		index++;
-		if (index >= table->capacity) {
+		if (index >= table->capacity)
+		{
 			// At end of entries array, wrap around.
 			index = 0;
 		}
@@ -99,17 +107,44 @@ char *ht_get(ht *table, char *key)
 	return NULL;
 }
 
+int macro_defined(ht *table, char *key)
+{
+	// AND hash with capacity-1 to ensure it's within entries array.
+	unsigned int hash = hash_key(key);
+	size_t index = (size_t)(hash & (unsigned int)(table->capacity - 1));
+
+	// Loop till we find an empty entry.
+	while (table->entries[index].key != NULL)
+	{
+		if (strcmp(key, table->entries[index].key) == 0)
+		{
+			// Found key, return value.
+			return 1;
+		}
+		// Key wasn't in this slot, move to next (linear probing).
+		index++;
+		if (index >= table->capacity)
+		{
+			// At end of entries array, wrap around.
+			index = 0;
+		}
+	}
+	return 0;
+}
+
 // Internal function to set an entry (without expanding table).
 static char *ht_set_entry(ht_entry *entries, size_t capacity, char *key,
-			  char *value, size_t *plength)
+						  char *value, size_t *plength)
 {
 	// AND hash with capacity-1 to ensure it's within entries array.
 	unsigned int hash = hash_key(key);
 	size_t index = (size_t)(hash & (unsigned int)(capacity - 1));
 
 	// Loop till we find an empty entry.
-	while (entries[index].key != NULL) {
-		if (strcmp(key, entries[index].key) == 0) {
+	while (entries[index].key != NULL)
+	{
+		if (strcmp(key, entries[index].key) == 0)
+		{
 			// Found key (it already exists), update value.
 			// entries[index].value = value;
 			strcpy(entries[index].value, value);
@@ -117,24 +152,26 @@ static char *ht_set_entry(ht_entry *entries, size_t capacity, char *key,
 		}
 		// Key wasn't in this slot, move to next (linear probing).
 		index++;
-		if (index >= capacity) {
+		if (index >= capacity)
+		{
 			// At end of entries array, wrap around.
 			index = 0;
 		}
 	}
 
 	// Didn't find key, allocate+copy if needed, then insert it.
-	if (plength != NULL) {
+	if (plength != NULL)
+	{
 		// key = strdup(key);
 		entries[index].key =
-		    (char *)malloc((strlen(key) + 1) * sizeof(char));
+			(char *)malloc((strlen(key) + 1) * sizeof(char));
 		strcpy(entries[index].key, key);
 		if (key == NULL)
 			return NULL;
 		(*plength)++;
 	}
 	entries[index].value =
-	    (char *)malloc((strlen(value) + 1) * sizeof(char));
+		(char *)malloc((strlen(value) + 1) * sizeof(char));
 	strcpy(entries[index].value, value);
 	return key;
 }
@@ -155,12 +192,14 @@ static int ht_expand(ht *table)
 		return 0;
 
 	// Iterate entries, move all non-empty ones to new table's entries.
-	for (i = 0; i < table->capacity; i++) {
+	for (i = 0; i < table->capacity; i++)
+	{
 		ht_entry entry = table->entries[i];
 
-		if (entry.key != NULL) {
+		if (entry.key != NULL)
+		{
 			ht_set_entry(new_entries, new_capacity, entry.key,
-				     entry.value, NULL);
+						 entry.value, NULL);
 		}
 	}
 
@@ -183,5 +222,5 @@ char *ht_set(ht *table, char *key, char *value)
 
 	// Set entry and update length.
 	return ht_set_entry(table->entries, table->capacity, key, value,
-			    &table->length);
+						&table->length);
 }

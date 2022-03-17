@@ -16,7 +16,9 @@ int main(int argc, char **argv)
 {
 	int i;
 	char buf[256];
+	int allowed_to_interpret;
 
+	allowed_to_interpret = 1;
 	infile = NULL;
 	infd = stdin;
 	outfd = stdout;
@@ -67,55 +69,74 @@ int main(int argc, char **argv)
 
 	while (fgets(buf, 256, infd))
 	{
-		if (buf[0] == '#')
+		if (allowed_to_interpret == 1)
+		{
+			if (strncmp(buf, "#define", 7) == 0)
+				insert_define_from_file(map, buf + 8, infd);
+			else if (strncmp(buf, "#undef", 6) == 0)
+				undefine_key(map, buf + 7);
+			else if (strncmp(buf, "#ifdef", 6) == 0)
+				allowed_to_interpret = check_if_defined(map, buf + 7);
+			else if (strncmp(buf, "#ifndef", 7) == 0)
+				allowed_to_interpret = (check_if_defined(map, buf + 8) + 1) % 2;
+			else if (strncmp(buf, "#if", 3) == 0)
+				allowed_to_interpret = evaluate_if_condition(map, buf + 4);
+			else if (strncmp(buf, "#else", 5) == 0)
+				allowed_to_interpret = 0;
+			else if (strncmp(buf, "#endif", 6) == 0)
+				;
+			else if (strlen(buf) == 1 && buf[0] == '\n')
+				;
+			else
+				analyze_and_print(map, buf, outfd);
+		}
+		else if (strncmp(buf, "#else", 5) == 0)
+			allowed_to_interpret = 1;
+		else if (strncmp(buf, "#elif", 5) == 0)
+			allowed_to_interpret = evaluate_if_condition(map, buf + 6);
+		else if (strncmp(buf, "#endif", 6) == 0)
+			allowed_to_interpret = 1;
+
+		/*if (buf[0] == '#')
 		{
 			if (strncmp(buf + 1, "define", 6) == 0)
 				insert_define_from_file(map, buf + 8, infd);
 			else if (strncmp(buf + 1, "undef", 5) == 0)
-				undefine_key(map, buf);
+				undefine_key(map, buf + 7);
 			else if (strncmp(buf + 1, "if", 2) == 0)
+				allowed_to_interpret = evaluate_if_condition(map, buf + 4);
+			else if (strncmp(buf, "else", 4))
 			{
-				int result;
-				result = evaluate_if_condition(map, buf + 4);
-				if (result)
-				{
-					fgets(buf, 256, infd);
-					while (strncmp(buf, "#else", 5) && strncmp(buf, "#endif", 6))
-					{
-						analyze_and_print(map, buf, outfd);
-						fgets(buf, 256, infd);
-					}
-					if (strncmp(buf, "#else", 5) == 0)
-					{
-						while (strncmp(buf, "#endif", 6))
-						{
-							fgets(buf, 256, infd);
-						}
-					}
-				}
+				if (allowed_to_interpret == 1)
+					allowed_to_interpret = 0;
 				else
-				{
-					fgets(buf, 256, infd);
-					while (strncmp(buf, "#else", 5) && strncmp(buf, "#endif", 6))
-					{
-						fgets(buf, 256, infd);
-					}
-					if (strncmp(buf, "#else", 5) == 0)
-					{
-						fgets(buf, 256, infd);
-						while (strncmp(buf, "#endif", 6))
-						{
-							analyze_and_print(map, buf, outfd);
-							fgets(buf, 256, infd);
-						}
-					}
-				}
+					allowed_to_interpret = 1;
 			}
+			else if (strncmp(buf, "endif", 5) == 0)
+				allowed_to_interpret = 1;
 		}
 		else if (strlen(buf) == 1 && buf[0] == '\n')
 			;
 		else
-			analyze_and_print(map, buf, outfd);
+			analyze_and_print(map, buf, outfd);*/
+		/*else if (strncmp(buf, "#else", 5) == 0)
+		{
+			if (allowed_to_interpret == 1)
+				allowed_to_interpret = 0;
+			else
+				allowed_to_interpret = 1;
+		}
+		else if (strncmp(buf, "#elif", 5) == 0)
+		{
+		}
+		else if (strncmp(buf, "#endif", 6) == 0)
+			allowed_to_interpret = 1;*/
+
+		/*else if (strncmp(buf, "#if", 3) == 0)
+		{
+			allowed_to_interpret = evaluate_if_condition(map, buf + 4);
+			// solve_ifs(map, buf + 4, infd, outfd);
+		}*/
 	}
 
 	if (infile != NULL)

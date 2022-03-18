@@ -15,7 +15,7 @@ typedef struct ht
 } ht;
 
 // Create hash table and return pointer to it, or NULL if out of memory.
-ht *ht_create(void);
+int ht_create(ht **table);
 
 // Free memory allocated for hash table, including allocated keys.
 void ht_destroy(ht *table);
@@ -28,7 +28,7 @@ char *ht_get(ht *table, char *key);
 // be NULL). If not already present in table, key is copied to newly
 // allocated memory (keys are freed automatically when ht_destroy is
 // called). Return address of copied key, or NULL if out of memory.
-char *ht_set(ht *table, char *key, char *value);
+int ht_set(ht *table, char *key, char *value);
 
 int delete_entry(ht *table, char *key);
 

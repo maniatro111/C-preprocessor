@@ -75,7 +75,6 @@ void insert_define_from_file(ht *tabel, char *buf, FILE *infd)
 	char *aux;
 	char *key;
 
-	// printf("%s", buf);
 	argumente = (char *)malloc((strlen(buf) + 1) * sizeof(char));
 	strcpy(argumente, buf);
 	aux = strtok(argumente, "\n ");
@@ -171,8 +170,10 @@ void analyze_and_print(ht *map, char *buf, FILE *outfd)
 		free(v);
 }
 
-void add_argument_mapping(char **argv, int *line, ht *map)
+int add_argument_mapping(char **argv, int *line, ht *map)
 {
+	int return_value;
+	return_value = 0;
 	if (strlen(argv[*line]) > 2)
 		argv[*line] = argv[*line] + 2;
 	else
@@ -183,11 +184,11 @@ void add_argument_mapping(char **argv, int *line, ht *map)
 		char *aux;
 
 		aux = strtok(argv[*line], "=");
-		ht_set(map, argv[*line], argv[*line] + strlen(argv[*line]) + 1);
+		return_value = ht_set(map, argv[*line], argv[*line] + strlen(argv[*line]) + 1);
 	}
 	else
 	{
-		ht_set(map, argv[*line], "");
+		return_value = ht_set(map, argv[*line], "");
 	}
 }
 
@@ -239,7 +240,6 @@ static FILE *check_if_file_in_dir(char **directory_list, int directory_list_size
 		strcat(path, "/");
 		strcat(path, file);
 		strcat(path, "\0");
-		// printf("%s\n", path);*/
 		fd = fopen(path, "r");
 		if (fd)
 		{
@@ -330,13 +330,20 @@ int read_file(ht *map, FILE *infd, FILE *outfd, char **directory_list, int direc
 	return return_value;
 }
 
-void add_directory_path(char ***list, int *capacity, int *size, char *path)
+int add_directory_path(char ***list, int *capacity, int *size, char *path)
 {
 	if ((*capacity) == 0)
 	{
 		*capacity = 10;
 		(*list) = (char **)malloc((*capacity) * sizeof(char *));
+		if ((*list) == NULL)
+			return 12;
 		(*list)[*size] = (char *)malloc((strlen(path) + 1) * sizeof(char));
+		if ((*list)[*size] == NULL)
+		{
+			free((*list));
+			return 12;
+		}
 		strcpy((*list)[*size], path);
 		(*size)++;
 	}
@@ -344,14 +351,54 @@ void add_directory_path(char ***list, int *capacity, int *size, char *path)
 	{
 		*capacity += 10;
 		(*list) = (char **)realloc(*list, (*capacity) * sizeof(char *));
+		if ((*list) == NULL)
+			return 12;
 		(*list)[*size] = (char *)malloc((strlen(path) + 1) * sizeof(char));
+		if ((*list)[*size] == NULL)
+		{
+			free((*list));
+			return 12;
+		}
 		strcpy((*list)[*size], path);
 		(*size)++;
 	}
 	else
 	{
 		(*list)[*size] = (char *)malloc((strlen(path) + 1) * sizeof(char));
+		if ((*list)[*size] == NULL)
+		{
+			free((*list));
+			return 12;
+		}
 		strcpy((*list)[*size], path);
 		(*size)++;
 	}
+
+	return 0;
+}
+
+int get_relative_path(char *buf, char **relative_path)
+{
+	int k = strlen(buf);
+	k--;
+	for (; k >= 0 && buf[k] != '/'; k--)
+		;
+	if (k > 0)
+	{
+		(*relative_path) = (char *)calloc((k + 2), sizeof(char));
+		if ((*relative_path) == NULL)
+			return 12;
+		strncpy((*relative_path), buf, k + 1);
+		strcat((*relative_path), "\0");
+	}
+	return 0;
+}
+
+int copy_file_name(char **infile_name, char *buf)
+{
+	(*infile_name) = (char *)malloc((strlen(buf) + 1) * sizeof(char));
+	if ((*infile_name) == NULL)
+		return 12;
+	strcpy((*infile_name), buf);
+	return 0;
 }

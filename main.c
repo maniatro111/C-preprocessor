@@ -27,17 +27,17 @@ int main(int argc, char **argv)
 	outfile = NULL;
 	return_value = 0;
 
-	map = ht_create();
-	for (i = 1; i < argc; i++)
+	return_value = ht_create(&map);
+	for (i = 1; i < argc && return_value == 0; i++)
 	{
 		if (argv[i][0] == '-')
 		{
 			if (argv[i][1] == 'D')
-				add_argument_mapping(argv, &i, map);
+				return_value = add_argument_mapping(argv, &i, map);
 			else if (argv[i][1] == 'I')
 			{
 				i++;
-				add_directory_path(&directory_list, &list_capacity, &list_entries, argv[i]);
+				return_value = add_directory_path(&directory_list, &list_capacity, &list_entries, argv[i]);
 			}
 			else if (argv[i][1] == 'o')
 			{
@@ -47,56 +47,47 @@ int main(int argc, char **argv)
 		}
 		else if (infile == NULL)
 		{
-			int k = strlen(argv[i]);
-			k--;
-			for (; k >= 0 && argv[i][k] != '/'; k--)
-				;
-			if (k > 0)
-			{
-				relative_path = (char *)calloc((k + 2), sizeof(char));
-				strncpy(relative_path, argv[i], k + 1);
-				strcat(relative_path, "\0");
-			}
+			return_value = get_relative_path(argv[i], &relative_path);
 
-			infile = (char *)malloc((strlen(argv[i]) + 1) * sizeof(char));
-			strcpy(infile, argv[i]);
+			if (return_value == 0)
+				return_value = copy_file_name(&infile, argv[i]);
 		}
 		else if (outfile == NULL)
 		{
-			outfile = (char *)malloc((strlen(argv[i]) + 1) * sizeof(char));
-			strcpy(outfile, argv[i]);
+			return_value = copy_file_name(&outfile, argv[i]);
 		}
 		else
 			return 1;
 	}
 
-	if (infile != NULL)
+	if (infile != NULL && return_value == 0)
 	{
 		infd = fopen(infile, "r");
 		if (infd == NULL)
 			return 1;
 	}
-	if (outfile != NULL)
+	if (outfile != NULL && return_value == 0)
 	{
 		outfd = fopen(outfile, "w+");
 		if (outfd == NULL)
 			return 1;
 	}
 
-	return_value = read_file(map, infd, outfd, directory_list, list_entries, relative_path);
-	if (infile != NULL)
+	if (return_value == 0)
+		return_value = read_file(map, infd, outfd, directory_list, list_entries, relative_path);
+	if (infile != NULL && return_value == 0)
 	{
 		free(infile);
 		free(relative_path);
 		fclose(infd);
 	}
-	if (outfile != NULL)
+	if (outfile != NULL && return_value == 0)
 	{
 		free(outfile);
 		fclose(outfd);
 	}
 
-	if (list_capacity != 0)
+	if (list_capacity != 0 && return_value == 0)
 	{
 		int i;
 		for (i = 0; i < list_entries; i++)
@@ -106,7 +97,8 @@ int main(int argc, char **argv)
 		free(directory_list);
 	}
 
-	ht_destroy(map);
+	if (return_value == 0)
+		ht_destroy(map);
 
 	return return_value;
 }

@@ -12,7 +12,7 @@ int check_not_in_between(int pos, int nr_el, int *vec);
 
 void analyze_and_print(ht *map, char *buf, FILE *outfd);
 
-void add_argument_mapping(char **argv, int *line, ht *map);
+int add_argument_mapping(char **argv, int *line, ht *map);
 
 int undefine_key(ht *map, char *key);
 
@@ -26,4 +26,8 @@ int add_header_file(char *buf, char **directory_list, FILE *outfd, ht *map, int 
 
 int read_file(ht *map, FILE *infd, FILE *outfd, char **directory_list, int directory_list_size, char *relative_path);
 
-void add_directory_path(char ***list, int *capacity, int *size, char *path);
+int add_directory_path(char ***list, int *capacity, int *size, char *path);
+
+int get_relative_path(char *buf, char **relative_path);
+
+int copy_file_name(char **infile_name, char *buf);

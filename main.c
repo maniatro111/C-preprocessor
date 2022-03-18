@@ -7,22 +7,25 @@
 #include "hash_table.h"
 #endif
 
-char *infile;
-char *outfile;
-FILE *infd, *outfd;
-ht *map;
-
 int main(int argc, char **argv)
 {
+	char *infile;
+	char *outfile;
+	char *relative_path;
+	char **directory_list;
+	int list_entries;
+	int list_capacity;
+	int return_value;
+	FILE *infd, *outfd;
+	ht *map;
 	int i;
-	char buf[256];
-	int allowed_to_interpret;
-
-	allowed_to_interpret = 1;
+	list_entries = 0;
+	list_capacity = 0;
 	infile = NULL;
 	infd = stdin;
 	outfd = stdout;
 	outfile = NULL;
+	return_value = 0;
 
 	map = ht_create();
 	for (i = 1; i < argc; i++)
@@ -33,6 +36,8 @@ int main(int argc, char **argv)
 				add_argument_mapping(argv, &i, map);
 			else if (argv[i][1] == 'I')
 			{
+				i++;
+				add_directory_path(&directory_list, &list_capacity, &list_entries, argv[i]);
 			}
 			else if (argv[i][1] == 'o')
 			{
@@ -42,6 +47,17 @@ int main(int argc, char **argv)
 		}
 		else if (infile == NULL)
 		{
+			int k = strlen(argv[i]);
+			k--;
+			for (; k >= 0 && argv[i][k] != '/'; k--)
+				;
+			if (k > 0)
+			{
+				relative_path = (char *)calloc((k + 2), sizeof(char));
+				strncpy(relative_path, argv[i], k + 1);
+				strcat(relative_path, "\0");
+			}
+
 			infile = (char *)malloc((strlen(argv[i]) + 1) * sizeof(char));
 			strcpy(infile, argv[i]);
 		}
@@ -67,81 +83,11 @@ int main(int argc, char **argv)
 			return 1;
 	}
 
-	while (fgets(buf, 256, infd))
-	{
-		if (allowed_to_interpret == 1)
-		{
-			if (strncmp(buf, "#define", 7) == 0)
-				insert_define_from_file(map, buf + 8, infd);
-			else if (strncmp(buf, "#undef", 6) == 0)
-				undefine_key(map, buf + 7);
-			else if (strncmp(buf, "#ifdef", 6) == 0)
-				allowed_to_interpret = check_if_defined(map, buf + 7);
-			else if (strncmp(buf, "#ifndef", 7) == 0)
-				allowed_to_interpret = (check_if_defined(map, buf + 8) + 1) % 2;
-			else if (strncmp(buf, "#if", 3) == 0)
-				allowed_to_interpret = evaluate_if_condition(map, buf + 4);
-			else if (strncmp(buf, "#else", 5) == 0)
-				allowed_to_interpret = 0;
-			else if (strncmp(buf, "#endif", 6) == 0)
-				;
-			else if (strlen(buf) == 1 && buf[0] == '\n')
-				;
-			else
-				analyze_and_print(map, buf, outfd);
-		}
-		else if (strncmp(buf, "#else", 5) == 0)
-			allowed_to_interpret = 1;
-		else if (strncmp(buf, "#elif", 5) == 0)
-			allowed_to_interpret = evaluate_if_condition(map, buf + 6);
-		else if (strncmp(buf, "#endif", 6) == 0)
-			allowed_to_interpret = 1;
-
-		/*if (buf[0] == '#')
-		{
-			if (strncmp(buf + 1, "define", 6) == 0)
-				insert_define_from_file(map, buf + 8, infd);
-			else if (strncmp(buf + 1, "undef", 5) == 0)
-				undefine_key(map, buf + 7);
-			else if (strncmp(buf + 1, "if", 2) == 0)
-				allowed_to_interpret = evaluate_if_condition(map, buf + 4);
-			else if (strncmp(buf, "else", 4))
-			{
-				if (allowed_to_interpret == 1)
-					allowed_to_interpret = 0;
-				else
-					allowed_to_interpret = 1;
-			}
-			else if (strncmp(buf, "endif", 5) == 0)
-				allowed_to_interpret = 1;
-		}
-		else if (strlen(buf) == 1 && buf[0] == '\n')
-			;
-		else
-			analyze_and_print(map, buf, outfd);*/
-		/*else if (strncmp(buf, "#else", 5) == 0)
-		{
-			if (allowed_to_interpret == 1)
-				allowed_to_interpret = 0;
-			else
-				allowed_to_interpret = 1;
-		}
-		else if (strncmp(buf, "#elif", 5) == 0)
-		{
-		}
-		else if (strncmp(buf, "#endif", 6) == 0)
-			allowed_to_interpret = 1;*/
-
-		/*else if (strncmp(buf, "#if", 3) == 0)
-		{
-			allowed_to_interpret = evaluate_if_condition(map, buf + 4);
-			// solve_ifs(map, buf + 4, infd, outfd);
-		}*/
-	}
-
+	return_value = read_file(map, infd, outfd, directory_list, list_entries, relative_path);
 	if (infile != NULL)
 	{
 		free(infile);
+		free(relative_path);
 		fclose(infd);
 	}
 	if (outfile != NULL)
@@ -150,7 +96,17 @@ int main(int argc, char **argv)
 		fclose(outfd);
 	}
 
+	if (list_capacity != 0)
+	{
+		int i;
+		for (i = 0; i < list_entries; i++)
+		{
+			free(directory_list[i]);
+		}
+		free(directory_list);
+	}
+
 	ht_destroy(map);
 
-	return 0;
+	return return_value;
 }

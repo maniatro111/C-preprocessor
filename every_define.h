@@ -21,3 +21,9 @@ void solve_ifs(ht *map, char *buf, FILE *infd, FILE *outfd);
 int evaluate_if_condition(ht *map, char *key);
 
 int check_if_defined(ht *map, char *key);
+
+int add_header_file(char *buf, char **directory_list, FILE *outfd, ht *map, int directory_list_size, char *relative_path);
+
+int read_file(ht *map, FILE *infd, FILE *outfd, char **directory_list, int directory_list_size, char *relative_path);
+
+void add_directory_path(char ***list, int *capacity, int *size, char *path);

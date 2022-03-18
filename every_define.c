@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "every_define.h"
 
 int check_not_in_between(int pos, int nr_el, int *vec)
 {
@@ -74,13 +75,18 @@ void insert_define_from_file(ht *tabel, char *buf, FILE *infd)
 	char *aux;
 	char *key;
 
+	// printf("%s", buf);
 	argumente = (char *)malloc((strlen(buf) + 1) * sizeof(char));
 	strcpy(argumente, buf);
 	aux = strtok(argumente, "\n ");
 	key = (char *)malloc((strlen(aux) + 1) * sizeof(char));
 	strcpy(key, aux);
 	aux = strtok(NULL, "\n");
-	if (aux[strlen(aux) - 1] == '\\')
+	if (aux == NULL)
+	{
+		ht_set(tabel, key, "");
+	}
+	else if (aux[strlen(aux) - 1] == '\\')
 	{
 		char *argumente_concatenate;
 		int i;
@@ -147,7 +153,7 @@ void analyze_and_print(ht *map, char *buf, FILE *outfd)
 
 	get_apostrophes(buf, &v, &n);
 
-	for (j = 0; j < (int)map->capacity; j++)
+	for (j = 0; j < map->capacity; j++)
 		if (map->entries[j].key != NULL && strstr(buf, map->entries[j].key))
 		{
 			int pos = strstr(buf, map->entries[j].key) - buf;
@@ -158,7 +164,8 @@ void analyze_and_print(ht *map, char *buf, FILE *outfd)
 				check_and_copy(pos, n, v, buf, map, j);
 			}
 		}
-
+	if (buf[0] == '\t')
+		buf[0] = ' ';
 	fprintf(outfd, "%s", buf);
 	if (n)
 		free(v);
@@ -216,51 +223,135 @@ int evaluate_if_condition(ht *map, char *key)
 
 int check_if_defined(ht *map, char *key)
 {
-	// printf("%s", key);
 	key[strlen(key) - 1] = '\0';
 	return macro_defined(map, key);
 }
 
-/*void solve_ifs(ht *map, char *buf, FILE *infd, FILE *outfd)
+static FILE *check_if_file_in_dir(char **directory_list, int directory_list_size, char *file)
 {
-
-	int result;
-	result = evaluate_if_condition(map, buf);
-	if (result)
+	int i;
+	for (i = 0; i < directory_list_size; i++)
 	{
-		fgets(buf, 256, infd);
-		while (strncmp(buf, "#else", 5) && strncmp(buf, "#endif", 6))
+		char *path;
+		FILE *fd;
+		path = (char *)calloc((strlen(directory_list[i]) + strlen(file) + 2), sizeof(char));
+		strcpy(path, directory_list[i]);
+		strcat(path, "/");
+		strcat(path, file);
+		strcat(path, "\0");
+		// printf("%s\n", path);*/
+		fd = fopen(path, "r");
+		if (fd)
 		{
-			analyze_and_print(map, buf, outfd);
-			fgets(buf, 256, infd);
+			free(path);
+			return fd;
 		}
-		if (strncmp(buf, "#else", 5) == 0)
+		else
 		{
-			while (strncmp(buf, "#endif", 6))
-			{
-				fgets(buf, 256, infd);
-			}
+			free(path);
 		}
+	}
+	return NULL;
+}
+
+int add_header_file(char *buf, char **directory_list, FILE *outfd, ht *map, int directory_list_size, char *relative_path)
+{
+	int return_value;
+	char *total_path;
+	return_value = 0;
+	buf[strlen(buf) - 1] = '\0';
+	buf[strlen(buf) - 1] = '\0';
+	FILE *infd;
+	total_path = (char *)calloc((strlen(relative_path) + strlen(buf)), sizeof(char));
+	strcpy(total_path, relative_path);
+	strcat(total_path, buf + 1);
+	infd = fopen(total_path, "r");
+	if (infd)
+	{
+		return_value = read_file(map, infd, outfd, directory_list, directory_list_size, relative_path);
+		fclose(infd);
+		free(total_path);
+		return return_value;
 	}
 	else
 	{
-		fgets(buf, 256, infd);
-		while (strncmp(buf, "#else", 5) && strncmp(buf, "#endif", 6) && strncmp(buf, "#elif", 5))
+		free(total_path);
+		FILE *fd = check_if_file_in_dir(directory_list, directory_list_size, buf + 1);
+		if (fd)
 		{
-			fgets(buf, 256, infd);
+			return_value = read_file(map, fd, outfd, directory_list, directory_list_size, relative_path);
+			fclose(fd);
+			return return_value;
 		}
-		if (strncmp(buf, "#else", 5) == 0)
-		{
-			fgets(buf, 256, infd);
-			while (strncmp(buf, "#endif", 6))
-			{
-				analyze_and_print(map, buf, outfd);
-				fgets(buf, 256, infd);
-			}
-		}
-		else if (strncmp(buf, "#elif", 5) == 0)
-		{
-			solve_ifs(map, buf + 6, infd, outfd);
-		}
+		else
+			return -1;
 	}
-}*/
+}
+
+int read_file(ht *map, FILE *infd, FILE *outfd, char **directory_list, int directory_list_size, char *relative_path)
+{
+	char buf[256];
+	int return_value;
+	int allowed_to_interpret;
+	allowed_to_interpret = 1;
+	return_value = 0;
+	while (fgets(buf, 256, infd))
+	{
+		if (allowed_to_interpret == 1 && return_value == 0)
+		{
+			if (strncmp(buf, "#define", 7) == 0)
+				insert_define_from_file(map, buf + 8, infd);
+			else if (strncmp(buf, "#undef", 6) == 0)
+				undefine_key(map, buf + 7);
+			else if (strncmp(buf, "#ifdef", 6) == 0)
+				allowed_to_interpret = check_if_defined(map, buf + 7);
+			else if (strncmp(buf, "#ifndef", 7) == 0)
+				allowed_to_interpret = (check_if_defined(map, buf + 8) + 1) % 2;
+			else if (strncmp(buf, "#if", 3) == 0)
+				allowed_to_interpret = evaluate_if_condition(map, buf + 4);
+			else if (strncmp(buf, "#else", 5) == 0)
+				allowed_to_interpret = 0;
+			else if (strncmp(buf, "#include", 8) == 0)
+				return_value = add_header_file(buf + 9, directory_list, outfd, map, directory_list_size, relative_path);
+			else if (strncmp(buf, "#endif", 6) == 0)
+				;
+			else if (strlen(buf) == 1 && buf[0] == '\n')
+				;
+			else
+				analyze_and_print(map, buf, outfd);
+		}
+		else if (strncmp(buf, "#else", 5) == 0)
+			allowed_to_interpret = 1;
+		else if (strncmp(buf, "#elif", 5) == 0)
+			allowed_to_interpret = evaluate_if_condition(map, buf + 6);
+		else if (strncmp(buf, "#endif", 6) == 0)
+			allowed_to_interpret = 1;
+	}
+	return return_value;
+}
+
+void add_directory_path(char ***list, int *capacity, int *size, char *path)
+{
+	if ((*capacity) == 0)
+	{
+		*capacity = 10;
+		(*list) = (char **)malloc((*capacity) * sizeof(char *));
+		(*list)[*size] = (char *)malloc((strlen(path) + 1) * sizeof(char));
+		strcpy((*list)[*size], path);
+		(*size)++;
+	}
+	else if (*size == *capacity)
+	{
+		*capacity += 10;
+		(*list) = (char **)realloc(*list, (*capacity) * sizeof(char *));
+		(*list)[*size] = (char *)malloc((strlen(path) + 1) * sizeof(char));
+		strcpy((*list)[*size], path);
+		(*size)++;
+	}
+	else
+	{
+		(*list)[*size] = (char *)malloc((strlen(path) + 1) * sizeof(char));
+		strcpy((*list)[*size], path);
+		(*size)++;
+	}
+}

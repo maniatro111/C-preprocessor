@@ -22,7 +22,7 @@ int check_not_in_between(int pos, int nr_el, int *vec)
 	return 1;
 }
 
-void get_apostrophes(char *string, int **vect, int *el_number)
+static int get_apostrophes(char *string, int **vect, int *el_number)
 {
 	*el_number = 0;
 	if (strchr(string, '\"'))
@@ -31,6 +31,8 @@ void get_apostrophes(char *string, int **vect, int *el_number)
 
 		initial_size = 10;
 		*vect = (int *)malloc(initial_size * sizeof(int));
+		if ((*vect) == NULL)
+			return 12;
 		(*vect)[*el_number] = strchr(string, '\"') - string;
 		(*el_number)++;
 		while (1 + (*vect)[(*el_number) - 1] < strlen(string) && strchr(string + 1 + (*vect)[(*el_number) - 1], '\"'))
@@ -39,13 +41,15 @@ void get_apostrophes(char *string, int **vect, int *el_number)
 			(*el_number)++;
 		}
 	}
+	return 0;
 }
 
-static void check_define_in_define(ht *tabel, char *value)
+static int check_define_in_define(ht *tabel, char *value)
 {
 	int j;
-
-	for (j = 0; j < tabel->capacity; j++)
+	int return_value;
+	return_value = 0;
+	for (j = 0; j < tabel->capacity && return_value == 0; j++)
 		if (tabel->entries[j].key != NULL)
 		{
 			if (strstr(value, tabel->entries[j].key) != NULL)
@@ -53,38 +57,42 @@ static void check_define_in_define(ht *tabel, char *value)
 				char *aux;
 				int i;
 
-				i = strstr(value, tabel->entries[j].key) -
-					value;
-				aux = (char *)malloc((strlen(value) + 1) *
-									 sizeof(char));
+				i = strstr(value, tabel->entries[j].key) - value;
+				aux = (char *)malloc((strlen(value) + 1) * sizeof(char));
+				if (aux == NULL)
+					return 12;
 				strcpy(aux, value);
 				strncpy(value, aux, i);
 				strcpy(value + i, tabel->entries[j].value);
-				strcpy(value + i +
-						   strlen(tabel->entries[j].value),
-					   aux + i + strlen(tabel->entries[j].key));
+				strcpy(value + i + strlen(tabel->entries[j].value), aux + i + strlen(tabel->entries[j].key));
 				free(aux);
-				check_define_in_define(tabel, value);
+				return_value = check_define_in_define(tabel, value);
 			}
 		}
+	return return_value;
 }
 
-void insert_define_from_file(ht *tabel, char *buf, FILE *infd)
+static int insert_define_from_file(ht *tabel, char *buf, FILE *infd)
 {
 	char *argumente;
 	char *aux;
 	char *key;
 
 	argumente = (char *)malloc((strlen(buf) + 1) * sizeof(char));
+	if (argumente == NULL)
+		return 12;
 	strcpy(argumente, buf);
 	aux = strtok(argumente, "\n ");
 	key = (char *)malloc((strlen(aux) + 1) * sizeof(char));
+	/*if (key == NULL)
+	{
+		free(argumente);
+		return 12;
+	}*/
 	strcpy(key, aux);
 	aux = strtok(NULL, "\n");
 	if (aux == NULL)
-	{
 		ht_set(tabel, key, "");
-	}
 	else if (aux[strlen(aux) - 1] == '\\')
 	{
 		char *argumente_concatenate;
@@ -127,40 +135,46 @@ void insert_define_from_file(ht *tabel, char *buf, FILE *infd)
 	}
 	free(key);
 	free(argumente);
+	return 0;
 }
 
-static void check_and_copy(int pos, int dimension, int *v, char *buf, ht *map, int map_index)
+static int check_and_copy(int pos, int dimension, int *v, char *buf, ht *map, int map_index)
 {
 	if (check_not_in_between(pos, dimension, v))
 	{
 		char *aux;
 
 		aux = (char *)malloc(256 * sizeof(char));
+		if (aux == NULL)
+			return 12;
 		strcpy(aux, buf);
 		strncpy(buf, aux, pos);
 		strcpy(buf + pos, map->entries[map_index].value);
 		strcpy(buf + pos + strlen(map->entries[map_index].value), aux + pos + strlen(map->entries[map_index].key));
 		free(aux);
 	}
+	return 0;
 }
 
-void analyze_and_print(ht *map, char *buf, FILE *outfd)
+static int analyze_and_print(ht *map, char *buf, FILE *outfd)
 {
 	int *v;
 	int n;
 	int j;
+	int return_value;
+	return_value = 0;
 
-	get_apostrophes(buf, &v, &n);
+	return_value = get_apostrophes(buf, &v, &n);
 
-	for (j = 0; j < map->capacity; j++)
+	for (j = 0; j < map->capacity && return_value == 0; j++)
 		if (map->entries[j].key != NULL && strstr(buf, map->entries[j].key))
 		{
 			int pos = strstr(buf, map->entries[j].key) - buf;
-			check_and_copy(pos, n, v, buf, map, j);
-			while (strstr(buf + pos + strlen(map->entries[j].key), map->entries[j].key))
+			return_value = check_and_copy(pos, n, v, buf, map, j);
+			while (strstr(buf + pos + strlen(map->entries[j].key), map->entries[j].key) && return_value == 0)
 			{
 				pos = strstr(buf + pos + strlen(map->entries[j].key), map->entries[j].key) - buf;
-				check_and_copy(pos, n, v, buf, map, j);
+				return_value = check_and_copy(pos, n, v, buf, map, j);
 			}
 		}
 	if (buf[0] == '\t')
@@ -168,6 +182,7 @@ void analyze_and_print(ht *map, char *buf, FILE *outfd)
 	fprintf(outfd, "%s", buf);
 	if (n)
 		free(v);
+	return return_value;
 }
 
 int add_argument_mapping(char **argv, int *line, ht *map)
@@ -187,9 +202,7 @@ int add_argument_mapping(char **argv, int *line, ht *map)
 		return_value = ht_set(map, argv[*line], argv[*line] + strlen(argv[*line]) + 1);
 	}
 	else
-	{
 		return_value = ht_set(map, argv[*line], "");
-	}
 }
 
 int undefine_key(ht *map, char *key)
@@ -241,15 +254,11 @@ static FILE *check_if_file_in_dir(char **directory_list, int directory_list_size
 		strcat(path, file);
 		strcat(path, "\0");
 		fd = fopen(path, "r");
+		free(path);
 		if (fd)
-		{
-			free(path);
 			return fd;
-		}
 		else
-		{
 			free(path);
-		}
 	}
 	return NULL;
 }
@@ -300,7 +309,7 @@ int read_file(ht *map, FILE *infd, FILE *outfd, char **directory_list, int direc
 		if (allowed_to_interpret == 1 && return_value == 0)
 		{
 			if (strncmp(buf, "#define", 7) == 0)
-				insert_define_from_file(map, buf + 8, infd);
+				return_value = insert_define_from_file(map, buf + 8, infd);
 			else if (strncmp(buf, "#undef", 6) == 0)
 				undefine_key(map, buf + 7);
 			else if (strncmp(buf, "#ifdef", 6) == 0)
@@ -318,7 +327,7 @@ int read_file(ht *map, FILE *infd, FILE *outfd, char **directory_list, int direc
 			else if (strlen(buf) == 1 && buf[0] == '\n')
 				;
 			else
-				analyze_and_print(map, buf, outfd);
+				return_value = analyze_and_print(map, buf, outfd);
 		}
 		else if (strncmp(buf, "#else", 5) == 0)
 			allowed_to_interpret = 1;

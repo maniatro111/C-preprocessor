@@ -8,7 +8,7 @@
 
 // Hash table entry (slot may be filled or empty).
 
-#define INITIAL_CAPACITY 1000 // must not be zero
+#define INITIAL_CAPACITY 2 // must not be zero
 
 int ht_create(ht **table)
 {
@@ -35,13 +35,11 @@ void ht_destroy(ht *table)
 	size_t i;
 
 	for (i = 0; i < table->capacity; i++)
-	{
 		if (table->entries[i].key != NULL)
 		{
 			free(table->entries[i].key);
 			free(table->entries[i].value);
 		}
-	}
 
 	// Then free entries array and table itself.
 	free(table->entries);
@@ -51,8 +49,6 @@ void ht_destroy(ht *table)
 #define FNV_OFFSET 2166136261UL
 #define FNV_PRIME 16777619UL
 
-// Return 64-bit FNV-1a hash for key (NUL-terminated). See description:
-// https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function
 static unsigned int hash_key(char *key)
 {
 	unsigned int hash = FNV_OFFSET;
@@ -116,24 +112,18 @@ int macro_defined(ht *table, char *key)
 	while (table->entries[index].key != NULL)
 	{
 		if (strcmp(key, table->entries[index].key) == 0)
-		{
 			// Found key, return value.
 			return 1;
-		}
 		// Key wasn't in this slot, move to next (linear probing).
 		index++;
 		if (index >= table->capacity)
-		{
 			// At end of entries array, wrap around.
 			index = 0;
-		}
 	}
 	return 0;
 }
 
-// Internal function to set an entry (without expanding table).
-int ht_set_entry(ht_entry *entries, size_t capacity, char *key,
-				 char *value, size_t *plength)
+static int ht_set_entry(ht_entry *entries, size_t capacity, char *key, char *value, size_t *plength)
 {
 	// AND hash with capacity-1 to ensure it's within entries array.
 	unsigned int hash = hash_key(key);
@@ -143,19 +133,12 @@ int ht_set_entry(ht_entry *entries, size_t capacity, char *key,
 	while (entries[index].key != NULL)
 	{
 		if (strcmp(key, entries[index].key) == 0)
-		{
-			// Found key (it already exists), update value.
-			// entries[index].value = value;
-			// strcpy(entries[index].value, value);
-			return -1; // entries[index].key;
-		}
+			return -1;
 		// Key wasn't in this slot, move to next (linear probing).
 		index++;
 		if (index >= capacity)
-		{
 			// At end of entries array, wrap around.
 			index = 0;
-		}
 	}
 
 	// Didn't find key, allocate+copy if needed, then insert it.
@@ -191,15 +174,16 @@ static int ht_expand(ht *table)
 	if (new_entries == NULL)
 		return 0;
 
+	table->length = 0;
 	// Iterate entries, move all non-empty ones to new table's entries.
 	for (i = 0; i < table->capacity; i++)
 	{
 		ht_entry entry = table->entries[i];
-
 		if (entry.key != NULL)
 		{
-			ht_set_entry(new_entries, new_capacity, entry.key,
-						 entry.value, NULL);
+			ht_set_entry(new_entries, new_capacity, entry.key, entry.value, &table->length);
+			free(table->entries[i].key);
+			free(table->entries[i].value);
 		}
 	}
 
@@ -219,8 +203,6 @@ int ht_set(ht *table, char *key, char *value)
 	if (table->length >= table->capacity / 2)
 		if (!ht_expand(table))
 			return 12;
-
-	// Set entry and update length.
-	return ht_set_entry(table->entries, table->capacity, key, value,
-						&table->length);
+	//  Set entry and update length.
+	return ht_set_entry(table->entries, table->capacity, key, value, &table->length);
 }

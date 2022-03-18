@@ -34,14 +34,10 @@ int main(int argc, char **argv)
 		{
 			if (argv[i][1] == 'D')
 				return_value = add_argument_mapping(argv, &i, map);
-			else if (argv[i][1] == 'I')
-			{
-				i++;
+			else if (argv[i++][1] == 'I')
 				return_value = add_directory_path(&directory_list, &list_capacity, &list_entries, argv[i]);
-			}
-			else if (argv[i][1] == 'o')
-			{
-			}
+			else if (argv[i][1] == 'o' && outfile == NULL)
+				return_value = copy_file_name(&outfile, argv[i]);
 			else
 				return 1;
 		}
@@ -53,9 +49,7 @@ int main(int argc, char **argv)
 				return_value = copy_file_name(&infile, argv[i]);
 		}
 		else if (outfile == NULL)
-		{
 			return_value = copy_file_name(&outfile, argv[i]);
-		}
 		else
 			return 1;
 	}
@@ -91,9 +85,7 @@ int main(int argc, char **argv)
 	{
 		int i;
 		for (i = 0; i < list_entries; i++)
-		{
 			free(directory_list[i]);
-		}
 		free(directory_list);
 	}
 

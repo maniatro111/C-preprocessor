@@ -43,32 +43,54 @@ static int get_apostrophes(char *string, int **vect, int *el_number)
 	}
 	return 0;
 }
-
-static int check_define_in_define(ht *tabel, char *value)
+static int search_for_key_and_copy(ht *tabel, char **value, int *start, int *end)
 {
-	int j;
+	char *aux;
+	aux = (char *)calloc((*end - *start + 1), sizeof(char));
+	if (aux == NULL)
+		return 12;
+	strncpy(aux, (*value) + *start, *end - *start);
+	strcat(aux, "\0");
+
+	if (ht_get(tabel, aux))
+	{
+		char *valoare;
+		char *copie;
+		valoare = ht_get(tabel, aux);
+		copie = (char *)calloc((strlen(*value) - strlen(aux) + strlen(valoare) + 1), sizeof(char));
+		if (copie == NULL)
+		{
+			free(aux);
+			return 12;
+		}
+		strncpy(copie, *value, *start);
+		strcat(copie, valoare);
+		strcat(copie, (*value) + *end);
+		strcat(copie, "\0");
+		*end = *start + strlen(valoare);
+		free(*value);
+		*value = copie;
+	}
+	else
+		*end = *start + strlen(aux);
+	free(aux);
+	*start = *end + 1;
+	return 0;
+}
+
+static int check_define_in_define(ht *tabel, char **value)
+{
+	int start;
+	int end;
 	int return_value;
 	return_value = 0;
-	for (j = 0; j < tabel->capacity && return_value == 0; j++)
-		if (tabel->entries[j].key != NULL)
-		{
-			if (strstr(value, tabel->entries[j].key) != NULL)
-			{
-				char *aux;
-				int i;
-
-				i = strstr(value, tabel->entries[j].key) - value;
-				aux = (char *)malloc((strlen(value) + 1) * sizeof(char));
-				if (aux == NULL)
-					return 12;
-				strcpy(aux, value);
-				strncpy(value, aux, i);
-				strcpy(value + i, tabel->entries[j].value);
-				strcpy(value + i + strlen(tabel->entries[j].value), aux + i + strlen(tabel->entries[j].key));
-				free(aux);
-				return_value = check_define_in_define(tabel, value);
-			}
-		}
+	start = 0;
+	end = 0;
+	for (; end < strlen(*value) && return_value == 0; end++)
+		if (strchr("\t []{}<>=+-*/%!&|^.,:;()\\", (*value)[end]))
+			return_value = search_for_key_and_copy(tabel, value, &start, &end);
+	if (return_value == 0)
+		return_value = search_for_key_and_copy(tabel, value, &start, &end);
 	return return_value;
 }
 
@@ -77,6 +99,8 @@ static int insert_define_from_file(ht *tabel, char *buf, FILE *infd)
 	char *argumente;
 	char *aux;
 	char *key;
+	int return_value;
+	return_value = 0;
 
 	argumente = (char *)malloc((strlen(buf) + 1) * sizeof(char));
 	if (argumente == NULL)
@@ -84,22 +108,22 @@ static int insert_define_from_file(ht *tabel, char *buf, FILE *infd)
 	strcpy(argumente, buf);
 	aux = strtok(argumente, "\n ");
 	key = (char *)malloc((strlen(aux) + 1) * sizeof(char));
-	/*if (key == NULL)
+	if (key == NULL)
 	{
 		free(argumente);
 		return 12;
-	}*/
+	}
 	strcpy(key, aux);
 	aux = strtok(NULL, "\n");
 	if (aux == NULL)
-		ht_set(tabel, key, "");
+		return_value = ht_set(tabel, key, "");
 	else if (aux[strlen(aux) - 1] == '\\')
 	{
 		char *argumente_concatenate;
 		int i;
-
 		argumente_concatenate = (char *)calloc(250, sizeof(char));
-		strcat(argumente_concatenate, aux);
+		if (argumente_concatenate != NULL)
+			strcat(argumente_concatenate, aux);
 		argumente_concatenate[strlen(argumente_concatenate) - 1] = '\0';
 		for (i = strlen(argumente_concatenate) - 1; i >= 0 && (argumente_concatenate[i] == ' ' || argumente_concatenate[i] == '\t'); i--)
 			argumente_concatenate[i] = '\0';
@@ -108,13 +132,11 @@ static int insert_define_from_file(ht *tabel, char *buf, FILE *infd)
 		while (buf[strlen(buf) - 1] == '\\')
 		{
 			int i;
-
 			for (i = 0; i < strlen(buf) && (buf[i] == ' ' || buf[i] == '\t'); i++)
 				;
 			strcat(argumente_concatenate, " ");
 			strcat(argumente_concatenate, buf + i);
 			argumente_concatenate[strlen(argumente_concatenate) - 1] = '\0';
-
 			for (i = strlen(argumente_concatenate); i >= 1 && (argumente_concatenate[i] == ' ' && argumente_concatenate[i - 1] == ' '); i--)
 				argumente_concatenate[i] = '\0';
 			fgets(buf, 256, infd);
@@ -124,18 +146,42 @@ static int insert_define_from_file(ht *tabel, char *buf, FILE *infd)
 			;
 		strcat(argumente_concatenate, " ");
 		strcat(argumente_concatenate, buf + i);
-		check_define_in_define(tabel, aux);
-		ht_set(tabel, key, argumente_concatenate);
+
+		// printf("%s\n", argumente_concatenate);
+		char *mimi;
+		mimi = (char *)malloc((strlen(aux) + 1) * sizeof(char));
+		if (mimi == NULL)
+			return_value = 12;
+		if (return_value == 0)
+		{
+			strcpy(mimi, aux);
+			return_value = check_define_in_define(tabel, &mimi);
+		}
+		if (return_value == 0)
+			return_value = ht_set(tabel, key, argumente_concatenate);
+		if (return_value == 0)
+			free(mimi);
 		free(argumente_concatenate);
 	}
 	else
 	{
-		check_define_in_define(tabel, aux);
-		ht_set(tabel, key, aux);
+		char *mimi;
+		mimi = (char *)malloc((strlen(aux) + 1) * sizeof(char));
+		if (mimi == NULL)
+			return_value = 12;
+		if (return_value == 0)
+		{
+			strcpy(mimi, aux);
+			return_value = check_define_in_define(tabel, &mimi);
+		}
+		if (return_value == 0)
+			return_value = ht_set(tabel, key, mimi);
+		if (return_value == 0)
+			free(mimi);
 	}
 	free(key);
 	free(argumente);
-	return 0;
+	return return_value;
 }
 
 static int check_and_copy(int pos, int dimension, int *v, char *buf, ht *map, int map_index)
@@ -144,13 +190,14 @@ static int check_and_copy(int pos, int dimension, int *v, char *buf, ht *map, in
 	{
 		char *aux;
 
-		aux = (char *)malloc(256 * sizeof(char));
+		aux = (char *)calloc(256, sizeof(char));
 		if (aux == NULL)
 			return 12;
 		strcpy(aux, buf);
 		strncpy(buf, aux, pos);
 		strcpy(buf + pos, map->entries[map_index].value);
 		strcpy(buf + pos + strlen(map->entries[map_index].value), aux + pos + strlen(map->entries[map_index].key));
+		strcat(buf, "\0");
 		free(aux);
 	}
 	return 0;
@@ -160,28 +207,32 @@ static int analyze_and_print(ht *map, char *buf, FILE *outfd)
 {
 	int *v;
 	int n;
-	int j;
+	int start;
+	int end;
 	int return_value;
 	return_value = 0;
-
+	start = 0;
+	end = 0;
+	char *copie;
+	copie = (char *)calloc(256, sizeof(char));
+	if (copie == NULL)
+		return 12;
+	strcpy(copie, buf);
 	return_value = get_apostrophes(buf, &v, &n);
-
-	for (j = 0; j < map->capacity && return_value == 0; j++)
-		if (map->entries[j].key != NULL && strstr(buf, map->entries[j].key))
-		{
-			int pos = strstr(buf, map->entries[j].key) - buf;
-			return_value = check_and_copy(pos, n, v, buf, map, j);
-			while (strstr(buf + pos + strlen(map->entries[j].key), map->entries[j].key) && return_value == 0)
-			{
-				pos = strstr(buf + pos + strlen(map->entries[j].key), map->entries[j].key) - buf;
-				return_value = check_and_copy(pos, n, v, buf, map, j);
-			}
-		}
-	if (buf[0] == '\t')
-		buf[0] = ' ';
-	fprintf(outfd, "%s", buf);
-	if (n)
-		free(v);
+	for (; end < strlen(copie) && return_value == 0; end++)
+		if (strchr("\t []{}<>=+-*/%!&|^.,:;()\\", (copie)[end]))
+			return_value = search_for_key_and_copy(map, &copie, &start, &end);
+	if (return_value == 0)
+		return_value = search_for_key_and_copy(map, &copie, &start, &end);
+	if (return_value == 0)
+	{
+		if (copie[0] == '\t')
+			copie[0] = ' ';
+		fprintf(outfd, "%s", copie);
+		if (n)
+			free(v);
+	}
+	free(copie);
 	return return_value;
 }
 
@@ -197,7 +248,6 @@ int add_argument_mapping(char **argv, int *line, ht *map)
 	if (strchr(argv[*line], '=') != NULL)
 	{
 		char *aux;
-
 		aux = strtok(argv[*line], "=");
 		return_value = ht_set(map, argv[*line], argv[*line] + strlen(argv[*line]) + 1);
 	}
@@ -249,6 +299,8 @@ static FILE *check_if_file_in_dir(char **directory_list, int directory_list_size
 		char *path;
 		FILE *fd;
 		path = (char *)calloc((strlen(directory_list[i]) + strlen(file) + 2), sizeof(char));
+		if (path == NULL)
+			return NULL;
 		strcpy(path, directory_list[i]);
 		strcat(path, "/");
 		strcat(path, file);
@@ -257,8 +309,6 @@ static FILE *check_if_file_in_dir(char **directory_list, int directory_list_size
 		free(path);
 		if (fd)
 			return fd;
-		else
-			free(path);
 	}
 	return NULL;
 }
@@ -272,6 +322,8 @@ int add_header_file(char *buf, char **directory_list, FILE *outfd, ht *map, int 
 	buf[strlen(buf) - 1] = '\0';
 	FILE *infd;
 	total_path = (char *)calloc((strlen(relative_path) + strlen(buf)), sizeof(char));
+	if (total_path == NULL)
+		return 12;
 	strcpy(total_path, relative_path);
 	strcat(total_path, buf + 1);
 	infd = fopen(total_path, "r");
@@ -293,7 +345,7 @@ int add_header_file(char *buf, char **directory_list, FILE *outfd, ht *map, int 
 			return return_value;
 		}
 		else
-			return -1;
+			return 12;
 	}
 }
 
@@ -304,7 +356,7 @@ int read_file(ht *map, FILE *infd, FILE *outfd, char **directory_list, int direc
 	int allowed_to_interpret;
 	allowed_to_interpret = 1;
 	return_value = 0;
-	while (fgets(buf, 256, infd))
+	while (fgets(buf, 256, infd) && return_value == 0)
 	{
 		if (allowed_to_interpret == 1 && return_value == 0)
 		{

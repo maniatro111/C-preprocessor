@@ -133,7 +133,7 @@ static int ht_set_entry(ht_entry *entries, size_t capacity, char *key, char *val
 	while (entries[index].key != NULL)
 	{
 		if (strcmp(key, entries[index].key) == 0)
-			return -1;
+			return 0;
 		// Key wasn't in this slot, move to next (linear probing).
 		index++;
 		if (index >= capacity)
@@ -167,6 +167,8 @@ static int ht_expand(ht *table)
 	size_t i;
 	ht_entry *new_entries;
 	size_t new_capacity = table->capacity * 2;
+	int return_value;
+	return_value = 1;
 
 	if (new_capacity < table->capacity)
 		return 0; // overflow (capacity would be too big)
@@ -176,12 +178,15 @@ static int ht_expand(ht *table)
 
 	table->length = 0;
 	// Iterate entries, move all non-empty ones to new table's entries.
-	for (i = 0; i < table->capacity; i++)
+	for (i = 0; i < table->capacity && return_value == 1; i++)
 	{
 		ht_entry entry = table->entries[i];
 		if (entry.key != NULL)
 		{
-			ht_set_entry(new_entries, new_capacity, entry.key, entry.value, &table->length);
+			int aux;
+			aux = ht_set_entry(new_entries, new_capacity, entry.key, entry.value, &table->length);
+			if (aux == 12)
+				return_value = 0;
 			free(table->entries[i].key);
 			free(table->entries[i].value);
 		}
@@ -191,7 +196,7 @@ static int ht_expand(ht *table)
 	free(table->entries);
 	table->entries = new_entries;
 	table->capacity = new_capacity;
-	return 1;
+	return return_value;
 }
 
 int ht_set(ht *table, char *key, char *value)

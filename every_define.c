@@ -129,6 +129,7 @@ static int insert_define_from_file(map *tabel, char *buf, FILE *infd)
 	else if (aux[strlen(aux) - 1] == '\\') {
 		char *argumente_concatenate;
 		int i;
+		char *mimi;
 
 		argumente_concatenate = (char *)calloc(250, sizeof(char));
 		if (argumente_concatenate != NULL)
@@ -155,9 +156,6 @@ static int insert_define_from_file(map *tabel, char *buf, FILE *infd)
 			buf[strlen(buf) - 1] = '\0';
 		}
 		eliminate_tabs_and_add_space(argumente_concatenate, buf);
-
-		char *mimi;
-
 		mimi = (char *)malloc((strlen(aux) + 1) * sizeof(char));
 		if (mimi == NULL)
 			return_value = 12;
@@ -260,12 +258,14 @@ int add_argument_mapping(char **argv, int *line, map *map)
 				       argv[*line] + strlen(argv[*line]) + 1);
 	} else
 		return_value = map_set(map, argv[*line], "");
+	return return_value;
 }
 
 static int undefine_key(map *map, char *key)
 {
 	key[strlen(key) - 1] = '\0';
 	delete_entry(map, key);
+	return 0;
 }
 
 static int turn_to_int_and_check(char *eval)

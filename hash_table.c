@@ -125,6 +125,7 @@ static int map_expand(map *table)
 	table->length = 0;
 	for (i = 0; i < table->capacity && return_value == 1; i++) {
 		map_entry entry = table->entries[i];
+
 		if (entry.key != NULL) {
 			int aux;
 

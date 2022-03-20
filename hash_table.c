@@ -12,8 +12,8 @@
  * This is the function that allocates memory for the
  * creation of the map data structure.
  * @param map - reference to the memory zone of the map
- * @return 0 if the creation is a success
- * 		   12 in case on of the mallocs fail
+ * @return 0 - if the creation is a success
+ *         12 - in case on of the mallocs fail
  */
 int map_create(map **mp)
 {
@@ -85,19 +85,19 @@ static unsigned long hash_function(char *str)
  * @param mp - the map data structure which has the key
  * @param key - the key of the map entry that we need to delete
  * @return 0 - if we found the key and managed to erase it
- * 		   -1 - otherwise
+ *         -1 - otherwise
  */
 int delete_entry(map *mp, char *key)
 {
 	/* Calculate the index of the key */
 	unsigned long index = hash_function(key) % mp->capacity;
-	/* Iterate till we find the entry with the key given as argument
-	or till we find an empty entry */
+	/* Iterate till we find the entry with the key given as argument */
+	/* or till we find an empty entry */
 	if (mp->entries[index].key != NULL &&
 	    strcmp(mp->entries[index].key, key) == 0) {
-		/* Free the key and value and make them NULL
-		https://stackoverflow.com/questions/1025589/setting-variable-to-null-after-free
-	      */
+		/* Free the key and value and make them NULL*/
+		/* https://stackoverflow.com/questions/1025589/setting-variable-to-null-after-free
+		 */
 
 		free(mp->entries[index].key);
 		free(mp->entries[index].value);
@@ -114,7 +114,7 @@ int delete_entry(map *mp, char *key)
  * @param mp - the map in which we search
  * @param key - the key that we want to see the value of
  * @return the value located at key
- * 		   NULL if the key cannot be found
+ *         NULL if the key cannot be found
  */
 char *map_get(map *mp, char *key)
 {
@@ -139,7 +139,7 @@ char *map_get(map *mp, char *key)
  * @param mp - the map in which we search
  * @param key - the key we are searching for
  * @return 1 - if the key is found
- * 		   0 - if the key is not found
+ *         0 - if the key is not found
  */
 int key_exists(map *table, char *key)
 {
@@ -166,9 +166,9 @@ int key_exists(map *table, char *key)
  * @param value - the value of the new entry
  * @param plength - the number of entries in the map
  * @return 0 - if the insertion succeeds or there is already another entry with
- * 			   that key in the map
- * 		   12 - if one of the malloc fails
- * 		   -1 - if the key is NULL
+ *             that key in the map
+ *         12 - if one of the malloc fails
+ *         -1 - if the key is NULL
  */
 static int map_set_entry(entry *entries, unsigned long capacity, char *key,
 			 char *value, unsigned long *plength)
@@ -208,7 +208,7 @@ static int map_set_entry(entry *entries, unsigned long capacity, char *key,
  *
  * @param mp - the map that we want to expand
  * @return 0 - if the expand fails
- * 		   1 - if the expand succeeds
+ *         1 - if the expand succeeds
  */
 static int map_expand(map *mp)
 {
@@ -217,8 +217,8 @@ static int map_expand(map *mp)
 	unsigned long new_capacity = mp->capacity * 2;
 	int return_value = 1;
 
-	/* if the new capacitty is smaller than the previous one,
-	return 0 because of overflow */
+	/* if the new capacitty is smaller than the previous one, */
+	/* return 0 because of overflow */
 	if (new_capacity < mp->capacity)
 		return 0;
 	/* Else, allocate memory for a new entries array */
@@ -258,18 +258,18 @@ static int map_expand(map *mp)
  * @param key - the key of the new entry
  * @param value - the value of the entry
  * @return 1 - if the value is NULL
- * 		   -1 - if the key is NULL
- * 		   12 - if the expansion fails or one of the malloc fails
+ *         -1 - if the key is NULL
+ *         12 - if the expansion fails or one of the malloc fails
  *         0 - if the insertion succeeds or there is already another entry with
- * 			   that key in the map
+ *             that key in the map
  */
 int map_set(map *mp, char *key, char *value)
 {
 	/* If the value is NULL, return -1 */
 	if (value == NULL)
 		return -1;
-	/* If the number of entries in the map is greater than half of the
-	map capacity, try to expand the map */
+	/* If the number of entries in the map is greater than half of the*/
+	/* map capacity, try to expand the map */
 	if (mp->length >= mp->capacity / 2)
 		if (!map_expand(mp))
 			return 12;

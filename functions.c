@@ -15,7 +15,7 @@
  * @param vec - This array stores the positions of all pairs of double quotes in
  * that line
  * @return 1 - if the word is not between double quotes
- * 		   0 - if the word is between double quotes
+ *         0 - if the word is between double quotes
  */
 static int check_not_in_between(int pos, int nr_el, int *vec)
 {
@@ -37,7 +37,7 @@ static int check_not_in_between(int pos, int nr_el, int *vec)
  * found in the line
  * @param el_number - the size of the vect array
  * @return 12 - if there is a memory allocation problem
- * 		   0 - if the function is successful
+ *         0 - if the function is successful
  */
 static int get_double_quotes(char *string, int **vect, int *el_number)
 {
@@ -71,7 +71,7 @@ static int get_double_quotes(char *string, int **vect, int *el_number)
  * @param start - The starting position of the word
  * @param end - The ending position of the word
  * @return 12 - if there is a memory problem
- * 		   0 - if there is no error
+ *         0 - if there is no error
  */
 static int search_for_key_and_copy(map *mp, char **value, int *start, int *end)
 {
@@ -155,7 +155,7 @@ static void eliminate_tabs_and_add_space(char *dest, char *source)
  * @param infd - File* to the file we are reading from (in case of multi-line
  * defines)
  * @return 0 - If the function finishes successfully
- * 		   12 - If there is a memory allocation problem
+ *         12 - If there is a memory allocation problem
  */
 static int insert_define_from_file(map *mp, char *buf, FILE *infd)
 {
@@ -247,7 +247,7 @@ static int insert_define_from_file(map *mp, char *buf, FILE *infd)
  * @param buf - The line read form the file
  * @param outfd - The file pointre to the output
  * @return 0 - If the function runs successfully
- * 		   the result of the search_for_key_and_copy
+ *             the result of the search_for_key_and_copy
  */
 static int analyze_and_print(map *map, char *buf, FILE *outfd)
 {
@@ -293,7 +293,7 @@ static int analyze_and_print(map *map, char *buf, FILE *outfd)
  * @param line - current line in the argument matrix
  * @param map - The map in which we want to add the macro
  * @return 0 - if the function is successful
- * 	       the result of map_set
+ *             the result of map_set
  */
 int add_argument_mapping(char **argv, int *line, map *map)
 {
@@ -328,7 +328,7 @@ static void undefine_key(map *map, char *key)
  * to int and evaluates it.
  * @param eval - expression given as string
  * @return 0 - if the expression reduces to 0
- * 		   1 - if the expression reduces to 1
+ *         1 - if the expression reduces to 1
  */
 static int turn_to_int_and_check(char *eval)
 {
@@ -365,7 +365,7 @@ static int evaluate_if_condition(map *map, char *key)
  * @param map - The map in which we search the macro
  * @param key - The macro we are searching for
  * @return 0 - if the macro is not defined
- * 		   1 - if the macro is defined
+ *         1 - if the macro is defined
  */
 static int check_if_defined(map *map, char *key)
 {
@@ -380,7 +380,7 @@ static int check_if_defined(map *map, char *key)
  * @param directory_list_size - the size of the list
  * @param file - the name of the file
  * @return FILE* of the file found in one of the directories
- * 		   NULL if the file isn't in any directory
+ *         NULL if the file isn't in any directory
  */
 static FILE *check_if_file_in_dir(char **directory_list,
 				  int directory_list_size, char *file)
@@ -524,7 +524,7 @@ int read_file(map *map, FILE *infd, FILE *outfd, char **directory_list,
  * @param size - the number of paths stored
  * @param path - the path that needs to be added
  * @return 0 - if the function finishes successfully
- * 		   12 - if there is a memory problem
+ *         12 - if there is a memory problem
  */
 int add_directory_path(char ***list, int *capacity, int *size, char *path)
 {
@@ -556,7 +556,7 @@ int add_directory_path(char ***list, int *capacity, int *size, char *path)
  * @param buf - full path that contains the input file
  * @param relative_path - the relative path extracted from the input file
  * @return 0 - if the function finishes successfully
- * 		   12 - if there is a memory problem
+ *         12 - if there is a memory problem
  */
 int get_relative_path(char *buf, char **relative_path)
 {
@@ -581,7 +581,7 @@ int get_relative_path(char *buf, char **relative_path)
  * @param infile_name - the pointer where the name will be copied too
  * @param buf - the file name that needs to be copied
  * @return 0 - if the function finishes successfully
- * 		   12 - if there is a memory problem
+ *         12 - if there is a memory problem
  */
 int copy_file_name(char **infile_name, char *buf)
 {
@@ -616,7 +616,7 @@ void free_directory_list(char **directory_list, int size)
  * @param fd - FILE* of the file that was opened
  * @param mode - the mode in which we want to open the file ("r" or "w+")
  * @return -1 - if the file fails to open
- * 		   0 - if the function finishes successfully
+ *         0 - if the function finishes successfully
  */
 int open_file(char *name, FILE **fd, char *mode)
 {

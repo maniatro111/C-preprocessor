@@ -57,8 +57,8 @@ static int get_double_quotes(char *string, int **vect, int *el_number)
 		(*vect)[*el_number] = strchr(string, '\"') - string;
 		/* Move a position to the right to store the next position */
 		(*el_number)++;
-		/* While we still find double quotes in the line, store their
-		 * position */
+		/* While we still find double quotes in the line, store their */
+		/* position */
 		while (1 + (*vect)[(*el_number) - 1] < strlen(string) &&
 		       strchr(string + 1 + (*vect)[(*el_number) - 1], '\"')) {
 			(*vect)[*el_number] =
@@ -112,8 +112,8 @@ static int search_for_key_and_copy(map *mp, char **value, int *start, int *end)
 		strncpy(copie, *value, *start);
 		/* Append the value of the key */
 		strcat(copie, valoare);
-		/* Append the rest of the line, jumping the word that we
-		 * exchanged */
+		/* Append the rest of the line, jumping the word that we */
+		/* exchanged */
 		strcat(copie, (*value) + *end);
 		/* Append the null terminated string */
 		strcat(copie, "\0");
@@ -129,7 +129,8 @@ static int search_for_key_and_copy(map *mp, char **value, int *start, int *end)
 	/* Free the aux string */
 	free(aux);
 	/* Make the start end + 1 to point to the same character after the next
-	 * for iteration */
+	 */
+	/* for iteration */
 	*start = *end + 1;
 	return 0;
 }
@@ -147,11 +148,12 @@ static int check_define_in_define(map *mp, char **value)
 	int end = 0;
 	int return_value = 0;
 
-	/* Iterate through the whole line till the end of it, or till we
-	 * encounter a memory problem */
+	/* Iterate through the whole line till the end of it, or till we */
+	/* encounter a memory problem */
 	for (; end < strlen(*value) && return_value == 0; end++)
 		/* If we encounter one of the character in the list, that means
-		 * that we found th end of a word. Start analyzing it. */
+		 */
+		/* that we found th end of a word. Start analyzing it. */
 		if (strchr("\t []{}<>=+-*/%!&|^.,:;()\\", (*value)[end]))
 			return_value =
 			    search_for_key_and_copy(mp, value, &start, &end);
@@ -232,18 +234,20 @@ static int insert_define_from_file(map *mp, char *buf, FILE *infd)
 		/* Erase the \n character from the end */
 		buf[strlen(buf) - 1] = '\0';
 		/* Loop and read lines till we find a line that doesn't end with
-		 * \ anymore. That means that we finised reading the multi-line
-		 * define */
+		 */
+		/* \ anymore. That means that we finised reading the multi-line
+		 */
+		/* define */
 		while (buf[strlen(buf) - 1] == '\\') {
-			/* Erase all the tabs and spaces of the new read line
-			 * and append it to the value of the define*/
+			/* Erase all the tabs and spaces of the new read line */
+			/* and append it to the value of the define */
 			eliminate_tabs_and_add_space(argumente_concatenate,
 						     buf);
 			/* Erase the \ character at the end of the line */
 			argumente_concatenate[strlen(argumente_concatenate) -
 					      1] = '\0';
-			/* Erase all the spaces and tabs at the end of the
-			 * string */
+			/* Erase all the spaces and tabs at the end of the */
+			/* string */
 			for (i = strlen(argumente_concatenate);
 			     i >= 1 && (argumente_concatenate[i] == ' ' &&
 					argumente_concatenate[i - 1] == ' ');
@@ -255,7 +259,8 @@ static int insert_define_from_file(map *mp, char *buf, FILE *infd)
 			buf[strlen(buf) - 1] = '\0';
 		}
 		/* For the last line of the define, elimitate all starting tabs
-		 * and spaces, the copy it to the final value */
+		 */
+		/* and spaces, the copy it to the final value */
 		eliminate_tabs_and_add_space(argumente_concatenate, buf);
 		mimi = (char *)malloc((strlen(aux) + 1) * sizeof(char));
 		if (mimi == NULL)
@@ -272,7 +277,8 @@ static int insert_define_from_file(map *mp, char *buf, FILE *infd)
 			free(mimi);
 		free(argumente_concatenate);
 		/* Else, insert it in the map. Before that, make sure that the
-		 * value hasn't any other macros defined in it. */
+		 */
+		/* value hasn't any other macros defined in it. */
 	} else {
 		char *mimi;
 
@@ -324,24 +330,28 @@ static int analyze_and_print(map *map, char *buf, FILE *outfd)
 	/* Iterate through the whole line */
 	for (; end < strlen(copie) && return_value == 0; end++)
 		/* If the current character is one of these, that means that we
-		 * found the end of a word */
+		 */
+		/* found the end of a word */
 		if (strchr("\t []{}<>=+-*/%!&|^.,:;()\\", (copie)[end])) {
 			/* Check that the start of the word isn't between double
-			 * quotes */
+			 */
+			/* quotes */
 			if (check_not_in_between(start, n, v))
 				/* Check if the word is a macro and needs to be
-				 * changed */
+				 */
+				/* changed */
 				return_value = search_for_key_and_copy(
 				    map, &copie, &start, &end);
 			else
 				/* If the word isn't a macro, jump to the next
-				 * word */
+				 */
+				/* word */
 				start = end + 1;
 		}
 	/* Check that the last word isn't between double quotes */
 	if (return_value == 0 && check_not_in_between(start, n, v))
-		/* Check if the last word is a macro and needs to be
-		 * changed */
+		/* Check if the last word is a macro and needs to be */
+		/* changed */
 		return_value =
 		    search_for_key_and_copy(map, &copie, &start, &end);
 	/* If the first character is a tab, exchange it with a space */
@@ -373,7 +383,8 @@ int add_argument_mapping(char **argv, int *line, map *map)
 	int return_value = 0;
 
 	/* If there is no space between the -D option and macro, move two bytes
-	 * to the right */
+	 */
+	/* to the right */
 	if (strlen(argv[*line]) > 2)
 		argv[*line] = argv[*line] + 2;
 	else
@@ -438,7 +449,8 @@ static int evaluate_if_condition(map *map, char *key)
 	/* Get the value that may be at the key; */
 	aux = map_get(map, key);
 	/* If the value is NULL then it may already be an expression that we can
-	 * evaluate. Evaluate it.*/
+	 */
+	/* evaluate. Evaluate it.*/
 	if (aux == NULL)
 		return turn_to_int_and_check(key);
 	/* Else, copy the value of the key and evaluate it */
@@ -494,8 +506,8 @@ static FILE *check_if_file_in_dir(char **directory_list,
 		if (fd)
 			return fd;
 	}
-	/* Else the file does not exist in all the directories given as
-	 * argument. Return NULL. */
+	/* Else the file does not exist in all the directories given as */
+	/* argument. Return NULL. */
 	return NULL;
 }
 
@@ -530,7 +542,8 @@ static int add_header_file(char *buf, char **directory_list, FILE *outfd,
 	if (total_path == NULL)
 		return 12;
 	/* Try and see if the header file is in the same directory as the input
-	 * file */
+	 */
+	/* file */
 	strcpy(total_path, relative_path);
 	strcat(total_path, buf + 1);
 	infd = fopen(total_path, "r");
@@ -544,7 +557,8 @@ static int add_header_file(char *buf, char **directory_list, FILE *outfd,
 	}
 	free(total_path);
 	/* Else check if the header file is in one of the directories given as
-	 * argument */
+	 */
+	/* argument */
 	fd = check_if_file_in_dir(directory_list, directory_list_size, buf + 1);
 	if (fd) {
 		return_value = read_file(map, fd, outfd, directory_list,
@@ -573,10 +587,11 @@ int read_file(map *map, FILE *infd, FILE *outfd, char **directory_list,
 {
 	char buf[MAX_CMD_BUF_SIZE];
 	int return_value = 0;
-	/* This value is used to see if I can interpret the line that I read.
-	 * When I am in a if/else block an I have to interpret only one of it
-	 * this value will be 1 for the part that I have to interpret and 0 for
-	 * the part that I cannot interpret. */
+	/* This value is used to see if I can interpret the line that I read. */
+	/* When I am in a if/else block an I have to interpret only one of it */
+	/* this value will be 1 for the part that I have to interpret and 0 for
+	 */
+	/* the part that I cannot interpret. */
 	int allowed_to_interpret = 1;
 
 	/* While there are lines to be read */
@@ -603,7 +618,8 @@ int read_file(map *map, FILE *infd, FILE *outfd, char **directory_list,
 				allowed_to_interpret =
 				    evaluate_if_condition(map, buf + 4);
 			/* If the line is an else block, make the semaphore 0 so
-			 * that I don't interpret the next lines. */
+			 */
+			/* that I don't interpret the next lines. */
 			else if (strncmp(buf, "#else", 5) == 0)
 				allowed_to_interpret = 0;
 			/* If the line is an include*/
@@ -618,19 +634,20 @@ int read_file(map *map, FILE *infd, FILE *outfd, char **directory_list,
 			else if (strlen(buf) == 1 && buf[0] == '\n')
 				;
 			else
-				/* If the line is not a guard, analyze the
-				 * line*/
+				/* If the line is not a guard, analyze the */
+				/* line */
 				return_value =
 				    analyze_and_print(map, buf, outfd);
-			/* These commands need to be interpreted even if the
-			 * semaphore is on 0 */
+			/* These commands need to be interpreted even if the */
+			/* semaphore is on 0 */
 		} else if (strncmp(buf, "#else", 5) == 0)
 			/* Make the semaphore 1 to start interpreting next lines
 			 */
 			allowed_to_interpret = 1;
 		else if (strncmp(buf, "#elif", 5) == 0)
 			/* Evaluate the elif expression and make the semaphore
-			 * according to the result */
+			 */
+			/* according to the result */
 			allowed_to_interpret =
 			    evaluate_if_condition(map, buf + 6);
 		/* If we reached the end of an if block make the semaphore 1 */
@@ -653,14 +670,16 @@ int read_file(map *map, FILE *infd, FILE *outfd, char **directory_list,
 int add_directory_path(char ***list, int *capacity, int *size, char *path)
 {
 	/* If it is the first path that needs to be added, initialize the string
-	 * array */
+	 */
+	/* array */
 	if ((*capacity) == 0) {
 		*capacity = 10;
 		(*list) = (char **)malloc((*capacity) * sizeof(char *));
 		if ((*list) == NULL)
 			return 12;
 		/* Else, if we reached the capacity of the array, resize it and
-		 * copy the new entry */
+		 */
+		/* copy the new entry */
 	} else if (*size == *capacity) {
 		*capacity += 10;
 		(*list) = (char **)realloc(*list, (*capacity) * sizeof(char *));
@@ -692,8 +711,10 @@ int get_relative_path(char *buf, char **relative_path)
 {
 	int k = strlen(buf);
 	/* From the end of the string, iterate till the beginning of it or till
-	 * we find a / character. If we find this character, that means that the
-	 * input file has a relative path. */
+	 */
+	/* we find a / character. If we find this character, that means that the
+	 */
+	/* input file has a relative path. */
 	k--;
 	for (; k >= 0 && buf[k] != '/'; k--)
 		;

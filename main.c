@@ -38,19 +38,21 @@ int main(int argc, char **argv)
 				return_value = add_directory_path(
 				    &directory_list, &list_capacity,
 				    &list_entries, argv[i]);
-			/* If the argument is o and we don't already have an
-			 * outfile */
+			/* If the argument is o and we don't already have an */
+			/* outfile */
 			else if (argv[i][1] == 'o' && outfile == NULL)
 				/* Save the path to the outfile */
 				return_value =
 				    copy_file_name(&outfile, argv[i]);
-			/* Else return an error code, because we don't have
-			 * another options */
+			/* Else return an error code, because we don't have */
+			/* another options */
 			else
 				return 1;
 			/* If the argument isn't an option, check if we have a
-			 * path to an input file.  We can add a possible input
-			 * file, only if we don't already have one. */
+			 */
+			/* path to an input file.  We can add a possible input
+			 */
+			/* file, only if we don't already have one. */
 		} else if (infile == NULL) {
 			/* Get the relative path to the infile */
 			return_value =
@@ -59,13 +61,15 @@ int main(int argc, char **argv)
 			if (return_value == 0)
 				return_value = copy_file_name(&infile, argv[i]);
 			/* If the argument isn't an option and we already have
-			 * an input file check if we have a path to an output
-			 * file.  We can add a possible input file, only if we
-			 * don't already have one. */
+			 */
+			/* an input file check if we have a path to an output */
+			/* file.  We can add a possible input file, only if we
+			 */
+			/* don't already have one. */
 		} else if (outfile == NULL)
 			return_value = copy_file_name(&outfile, argv[i]);
-		/* We don't have any types of arguments that haven't been
-		 * treated. Return 1 so that the program finishes. */
+		/* We don't have any types of arguments that haven't been */
+		/* treated. Return 1 so that the program finishes. */
 		else
 			return 1;
 	}

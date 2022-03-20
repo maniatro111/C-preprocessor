@@ -19,7 +19,8 @@ int copy_file_name(char **infile_name, char *buf);
 
 int get_relative_path(char *buf, char **relative_path);
 
-int read_file(map *map, FILE *infd, FILE *outfd, char **directory_list, int directory_list_size, char *relative_path);
+int read_file(map *map, FILE *infd, FILE *outfd, char **directory_list,
+		  int directory_list_size, char *relative_path);
 
 void free_directory_list(char **directory_list, int size);
 

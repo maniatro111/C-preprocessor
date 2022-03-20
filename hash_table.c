@@ -96,7 +96,7 @@ int delete_entry(map *mp, char *key)
 	if (mp->entries[index].key != NULL &&
 	    strcmp(mp->entries[index].key, key) == 0) {
 		/* Free the key and value and make them NULL*/
-		/* https://stackoverflow.com/questions/1025589/setting-variable-to-null-after-free
+		/* http://tiny.cc/Link-to-discussion
 		 */
 
 		free(mp->entries[index].key);

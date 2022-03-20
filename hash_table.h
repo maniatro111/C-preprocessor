@@ -1,22 +1,28 @@
-typedef struct map_entry {
+/* These are the structures that I used for the map data structure */
+typedef struct entry {
 	char *key;
 	char *value;
-} map_entry;
+} entry;
 
 typedef struct map {
-	map_entry *entries;
+	entry *entries;
 	unsigned long capacity;
 	unsigned long length;
 } map;
 
-int map_create(map **table);
+/******************************************
+ *   ALL THE BRIEF EXPLANATIONS OF EACH   *
+ * FUNCTION ARE IN THE HASH_TABLE.C FILE. *
+ ******************************************/
 
-void map_destroy(map *table);
+int map_create(map **mp);
 
-char *map_get(map *table, char *key);
+void map_destroy(map *mp);
 
-int map_set(map *table, char *key, char *value);
+char *map_get(map *mp, char *key);
 
-int delete_entry(map *table, char *key);
+int map_set(map *mp, char *key, char *value);
 
-int macro_defined(map *table, char *key);
+int delete_entry(map *mp, char *key);
+
+int key_exists(map *mp, char *key);

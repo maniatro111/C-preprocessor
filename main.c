@@ -1,4 +1,4 @@
-#include "every_define.h"
+#include "functions.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,13 +21,20 @@ int main(int argc, char **argv)
 	FILE *infd = stdin;
 	FILE *outfd = stdout;
 
+	/* Create the map for storing macros */
 	return_value = map_create(&map);
+	/* Iterate through all arguments given */
 	for (i = 1; i < argc && return_value == 0; i++) {
+		/* If the current argument is an option */
 		if (argv[i][0] == '-') {
+			/* If the argument is D */
 			if (argv[i][1] == 'D')
+				/* We need to add the macro */
 				return_value =
 				    add_argument_mapping(argv, &i, map);
+			/* If the argument is I */
 			else if (argv[i++][1] == 'I')
+				/* Add the path to the directory path array */
 				return_value = add_directory_path(
 				    &directory_list, &list_capacity,
 				    &list_entries, argv[i]);
@@ -56,12 +63,8 @@ int main(int argc, char **argv)
 	if (return_value == 0)
 		return_value = read_file(map, infd, outfd, directory_list,
 					 list_entries, relative_path);
-
-	if (return_value == 0)
-		return_value = close_file(infile, infd, relative_path);
-
-	if (return_value == 0)
-		return_value = close_file(outfile, outfd, NULL);
+	close_file(infile, infd, relative_path);
+	close_file(outfile, outfd, NULL);
 
 	if (return_value == 0)
 		free_directory_list(directory_list, list_entries);

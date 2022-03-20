@@ -2,11 +2,21 @@
 #define HASH_TABLE 1
 #include "hash_table.h"
 #endif
-#include "every_define.h"
+#include "functions.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * @brief This function checks if a selected word starting at pos
+ * is or is not between double quotes
+ * @param pos - The position at which the word starts
+ * @param nr_el - Number of elements in the double quotes position array
+ * @param vec - This array stores the positions of all pairs of double quotes in
+ * that line
+ * @return 1 - if the word is not between double quotes
+ * 		   0 - if the word is between double quotes
+ */
 static int check_not_in_between(int pos, int nr_el, int *vec)
 {
 	int i;
@@ -14,12 +24,22 @@ static int check_not_in_between(int pos, int nr_el, int *vec)
 	if (!nr_el)
 		return 1;
 	for (i = 0; i < nr_el; i += 2)
-		if (pos > vec[i] && pos < vec[i + 1])
+		if (pos >= vec[i] && pos <= vec[i + 1])
 			return 0;
 	return 1;
 }
 
-static int get_apostrophes(char *string, int **vect, int *el_number)
+/**
+ * @brief This function gets all the positions of the double quotes
+ * present in the given line
+ * @param string - The line in which we search for the double quotes
+ * @param vect - The array in which we store the positions of the double quotes
+ * found in the line
+ * @param el_number - the size of the vect array
+ * @return 12 - if there is a memory allocation problem
+ * 		   0 - if the function is successful
+ */
+static int get_double_quotes(char *string, int **vect, int *el_number)
 {
 	*el_number = 0;
 	if (strchr(string, '\"')) {
@@ -42,8 +62,18 @@ static int get_apostrophes(char *string, int **vect, int *el_number)
 	}
 	return 0;
 }
-static int search_for_key_and_copy(map *tabel, char **value, int *start,
-				   int *end)
+
+/**
+ * @brief This function searches for a key in the map and copies the value
+ * at that key into the line that needs to be interpreted
+ * @param mp - The map in which we have to search the word
+ * @param value - The line that we have to interpret
+ * @param start - The starting position of the word
+ * @param end - The ending position of the word
+ * @return 12 - if there is a memory problem
+ * 		   0 - if there is no error
+ */
+static int search_for_key_and_copy(map *mp, char **value, int *start, int *end)
 {
 	char *aux;
 
@@ -53,11 +83,11 @@ static int search_for_key_and_copy(map *tabel, char **value, int *start,
 	strncpy(aux, (*value) + *start, *end - *start);
 	strcat(aux, "\0");
 
-	if (map_get(tabel, aux)) {
+	if (map_get(mp, aux)) {
 		char *valoare;
 		char *copie;
 
-		valoare = map_get(tabel, aux);
+		valoare = map_get(mp, aux);
 		copie = (char *)calloc(
 		    (strlen(*value) - strlen(aux) + strlen(valoare) + 1),
 		    sizeof(char));
@@ -79,7 +109,14 @@ static int search_for_key_and_copy(map *tabel, char **value, int *start,
 	return 0;
 }
 
-static int check_define_in_define(map *tabel, char **value)
+/**
+ * @brief This function splits the words in the line read from the file
+ * and checks if each work needs to be replaced
+ * @param mp - The map in which we search for the key
+ * @param value - The line read from the file
+ * @return the value of the function search_for_key_and_copy
+ */
+static int check_define_in_define(map *mp, char **value)
 {
 	int start = 0;
 	int end = 0;
@@ -88,13 +125,19 @@ static int check_define_in_define(map *tabel, char **value)
 	for (; end < strlen(*value) && return_value == 0; end++)
 		if (strchr("\t []{}<>=+-*/%!&|^.,:;()\\", (*value)[end]))
 			return_value =
-			    search_for_key_and_copy(tabel, value, &start, &end);
+			    search_for_key_and_copy(mp, value, &start, &end);
 	if (return_value == 0)
-		return_value =
-		    search_for_key_and_copy(tabel, value, &start, &end);
+		return_value = search_for_key_and_copy(mp, value, &start, &end);
 	return return_value;
 }
 
+/**
+ * @brief This function eliminates all the starting tabs of the line,
+ * replaces them with a space and copies the rest of the string
+ * in another
+ * @param dest - destination string
+ * @param source - source string
+ */
 static void eliminate_tabs_and_add_space(char *dest, char *source)
 {
 	int i = 0;
@@ -105,7 +148,16 @@ static void eliminate_tabs_and_add_space(char *dest, char *source)
 	strcat(dest, source + i);
 }
 
-static int insert_define_from_file(map *tabel, char *buf, FILE *infd)
+/**
+ * @brief This function inserts all the defines read from a file
+ * @param mp - The map in which we need to add the macros
+ * @param buf - The line read from the file
+ * @param infd - File* to the file we are reading from (in case of multi-line
+ * defines)
+ * @return 0 - If the function finishes successfully
+ * 		   12 - If there is a memory allocation problem
+ */
+static int insert_define_from_file(map *mp, char *buf, FILE *infd)
 {
 	char *argumente;
 	char *aux;
@@ -125,7 +177,7 @@ static int insert_define_from_file(map *tabel, char *buf, FILE *infd)
 	strcpy(key, aux);
 	aux = strtok(NULL, "\n");
 	if (aux == NULL)
-		return_value = map_set(tabel, key, "");
+		return_value = map_set(mp, key, "");
 	else if (aux[strlen(aux) - 1] == '\\') {
 		char *argumente_concatenate;
 		int i;
@@ -140,7 +192,7 @@ static int insert_define_from_file(map *tabel, char *buf, FILE *infd)
 				argumente_concatenate[i] == '\t');
 		     i--)
 			argumente_concatenate[i] = '\0';
-		fgets(buf, 256, infd);
+		fgets(buf, MAX_CMD_BUF_SIZE, infd);
 		buf[strlen(buf) - 1] = '\0';
 		while (buf[strlen(buf) - 1] == '\\') {
 			eliminate_tabs_and_add_space(argumente_concatenate,
@@ -152,7 +204,7 @@ static int insert_define_from_file(map *tabel, char *buf, FILE *infd)
 					argumente_concatenate[i - 1] == ' ');
 			     i--)
 				argumente_concatenate[i] = '\0';
-			fgets(buf, 256, infd);
+			fgets(buf, MAX_CMD_BUF_SIZE, infd);
 			buf[strlen(buf) - 1] = '\0';
 		}
 		eliminate_tabs_and_add_space(argumente_concatenate, buf);
@@ -161,11 +213,10 @@ static int insert_define_from_file(map *tabel, char *buf, FILE *infd)
 			return_value = 12;
 		if (return_value == 0) {
 			strcpy(mimi, aux);
-			return_value = check_define_in_define(tabel, &mimi);
+			return_value = check_define_in_define(mp, &mimi);
 		}
 		if (return_value == 0)
-			return_value =
-			    map_set(tabel, key, argumente_concatenate);
+			return_value = map_set(mp, key, argumente_concatenate);
 		if (return_value == 0)
 			free(mimi);
 		free(argumente_concatenate);
@@ -177,10 +228,10 @@ static int insert_define_from_file(map *tabel, char *buf, FILE *infd)
 			return_value = 12;
 		if (return_value == 0) {
 			strcpy(mimi, aux);
-			return_value = check_define_in_define(tabel, &mimi);
+			return_value = check_define_in_define(mp, &mimi);
 		}
 		if (return_value == 0)
-			return_value = map_set(tabel, key, mimi);
+			return_value = map_set(mp, key, mimi);
 		if (return_value == 0)
 			free(mimi);
 	}
@@ -189,26 +240,15 @@ static int insert_define_from_file(map *tabel, char *buf, FILE *infd)
 	return return_value;
 }
 
-static int check_and_copy(int pos, int dimension, int *v, char *buf, map *map,
-			  int map_index)
-{
-	if (check_not_in_between(pos, dimension, v)) {
-		char *aux;
-
-		aux = (char *)calloc(256, sizeof(char));
-		if (aux == NULL)
-			return 12;
-		strcpy(aux, buf);
-		strncpy(buf, aux, pos);
-		strcpy(buf + pos, map->entries[map_index].value);
-		strcpy(buf + pos + strlen(map->entries[map_index].value),
-		       aux + pos + strlen(map->entries[map_index].key));
-		strcat(buf, "\0");
-		free(aux);
-	}
-	return 0;
-}
-
+/**
+ * @brief This function gets a normal line read from the file,
+ * analizes it, replaces macros and prints it
+ * @param map - The map in which the macros are stored
+ * @param buf - The line read form the file
+ * @param outfd - The file pointre to the output
+ * @return 0 - If the function runs successfully
+ * 		   the result of the search_for_key_and_copy
+ */
 static int analyze_and_print(map *map, char *buf, FILE *outfd)
 {
 	int *v;
@@ -218,16 +258,21 @@ static int analyze_and_print(map *map, char *buf, FILE *outfd)
 	int end = 0;
 	int return_value = 0;
 
-	copie = (char *)calloc(256, sizeof(char));
+	copie = (char *)calloc(MAX_CMD_BUF_SIZE, sizeof(char));
 	if (copie == NULL)
 		return 12;
 	strcpy(copie, buf);
-	return_value = get_apostrophes(buf, &v, &n);
+	return_value = get_double_quotes(buf, &v, &n);
+
 	for (; end < strlen(copie) && return_value == 0; end++)
-		if (strchr("\t []{}<>=+-*/%!&|^.,:;()\\", (copie)[end]))
-			return_value =
-			    search_for_key_and_copy(map, &copie, &start, &end);
-	if (return_value == 0)
+		if (strchr("\t []{}<>=+-*/%!&|^.,:;()\\", (copie)[end])) {
+			if (check_not_in_between(start, n, v))
+				return_value = search_for_key_and_copy(
+				    map, &copie, &start, &end);
+			else
+				start = end + 1;
+		}
+	if (return_value == 0 && check_not_in_between(start, n, v))
 		return_value =
 		    search_for_key_and_copy(map, &copie, &start, &end);
 	if (return_value == 0) {
@@ -241,6 +286,15 @@ static int analyze_and_print(map *map, char *buf, FILE *outfd)
 	return return_value;
 }
 
+/**
+ * @brief This function adds a new macro given from the
+ * command line into the map
+ * @param argv - all the arguments given to the executable
+ * @param line - current line in the argument matrix
+ * @param map - The map in which we want to add the macro
+ * @return 0 - if the function is successful
+ * 	       the result of map_set
+ */
 int add_argument_mapping(char **argv, int *line, map *map)
 {
 	int return_value = 0;
@@ -249,11 +303,8 @@ int add_argument_mapping(char **argv, int *line, map *map)
 		argv[*line] = argv[*line] + 2;
 	else
 		(*line)++;
-
 	if (strchr(argv[*line], '=') != NULL) {
-		char *aux;
-
-		aux = strtok(argv[*line], "=");
+		strtok(argv[*line], "=");
 		return_value = map_set(map, argv[*line],
 				       argv[*line] + strlen(argv[*line]) + 1);
 	} else
@@ -261,13 +312,24 @@ int add_argument_mapping(char **argv, int *line, map *map)
 	return return_value;
 }
 
-static int undefine_key(map *map, char *key)
+/**
+ * @brief This function erases an entry from the map given as argument
+ * @param map - The map that probably contains the key
+ * @param key - The key of the entry that we want to erase
+ */
+static void undefine_key(map *map, char *key)
 {
 	key[strlen(key) - 1] = '\0';
 	delete_entry(map, key);
-	return 0;
 }
 
+/**
+ * @brief This function turns an expression ( 0 or 1 )
+ * to int and evaluates it.
+ * @param eval - expression given as string
+ * @return 0 - if the expression reduces to 0
+ * 		   1 - if the expression reduces to 1
+ */
 static int turn_to_int_and_check(char *eval)
 {
 	int a;
@@ -279,6 +341,13 @@ static int turn_to_int_and_check(char *eval)
 		return 1;
 }
 
+/**
+ * @brief This function replaces all the macros in the expression before
+ * evaluating it
+ * @param map - The map in which we search for macros
+ * @param key - The macro
+ * @return the result of turn_to_int_and_check
+ */
 static int evaluate_if_condition(map *map, char *key)
 {
 	char *aux;
@@ -291,12 +360,28 @@ static int evaluate_if_condition(map *map, char *key)
 	return turn_to_int_and_check(key);
 }
 
+/**
+ * @brief Check if a macro is defined (not if it also has a value)
+ * @param map - The map in which we search the macro
+ * @param key - The macro we are searching for
+ * @return 0 - if the macro is not defined
+ * 		   1 - if the macro is defined
+ */
 static int check_if_defined(map *map, char *key)
 {
 	key[strlen(key) - 1] = '\0';
-	return macro_defined(map, key);
+	return key_exists(map, key);
 }
 
+/**
+ * @brief This function checks if a file is in a directory
+ * given as argument
+ * @param directory_list - the list of paths to the directory
+ * @param directory_list_size - the size of the list
+ * @param file - the name of the file
+ * @return FILE* of the file found in one of the directories
+ * 		   NULL if the file isn't in any directory
+ */
 static FILE *check_if_file_in_dir(char **directory_list,
 				  int directory_list_size, char *file)
 {
@@ -323,6 +408,19 @@ static FILE *check_if_file_in_dir(char **directory_list,
 	return NULL;
 }
 
+/**
+ * @brief This function searches for the file that needs to be included
+ * by a #include directive and starts to analyze it
+ * @param buf - the name of the file that needs to be included
+ * @param directory_list - all the paths to the directories that probably
+ * contain the file
+ * @param outfd - File* to output file
+ * @param map - map with the macros
+ * @param directory_list_size - the size of the directory list
+ * @param relative_path - the relative path to the input file
+ * @return 12 if there are memory problems or the file does not exist
+ *         the result of the read_file function
+ */
 static int add_header_file(char *buf, char **directory_list, FILE *outfd,
 			   map *map, int directory_list_size,
 			   char *relative_path)
@@ -360,14 +458,26 @@ static int add_header_file(char *buf, char **directory_list, FILE *outfd,
 	return 12;
 }
 
+/**
+ * @brief This function reads a file line by line and analizes it. It checks for
+ * all the guards tested by this homework.
+ * @param map - the map where all the macros are stored
+ * @param infd - File* to the input file
+ * @param outfd - File* to the output file
+ * @param directory_list - list of paths to directories
+ * @param directory_list_size - the size of the list
+ * @param relative_path - relative path of the input file
+ * @return 0 - if everything ends successfully
+ *         12 - if there was a memory problem
+ */
 int read_file(map *map, FILE *infd, FILE *outfd, char **directory_list,
 	      int directory_list_size, char *relative_path)
 {
-	char buf[256];
+	char buf[MAX_CMD_BUF_SIZE];
 	int return_value = 0;
 	int allowed_to_interpret = 1;
 
-	while (fgets(buf, 256, infd) && return_value == 0) {
+	while (fgets(buf, MAX_CMD_BUF_SIZE, infd) && return_value == 0) {
 		if (allowed_to_interpret == 1 && return_value == 0) {
 			if (strncmp(buf, "#define", 7) == 0)
 				return_value =
@@ -407,6 +517,15 @@ int read_file(map *map, FILE *infd, FILE *outfd, char **directory_list,
 	return return_value;
 }
 
+/**
+ * @brief This function adds a path to a directory to the directory array
+ * @param list - array to all the directory paths
+ * @param capacity - the array capacity
+ * @param size - the number of paths stored
+ * @param path - the path that needs to be added
+ * @return 0 - if the function finishes successfully
+ * 		   12 - if there is a memory problem
+ */
 int add_directory_path(char ***list, int *capacity, int *size, char *path)
 {
 	if ((*capacity) == 0) {
@@ -431,6 +550,14 @@ int add_directory_path(char ***list, int *capacity, int *size, char *path)
 	return 0;
 }
 
+/**
+ * @brief This function extracts the relative path from the input file and
+ * stores it in the relative_path pointer
+ * @param buf - full path that contains the input file
+ * @param relative_path - the relative path extracted from the input file
+ * @return 0 - if the function finishes successfully
+ * 		   12 - if there is a memory problem
+ */
 int get_relative_path(char *buf, char **relative_path)
 {
 	int k = strlen(buf);
@@ -448,6 +575,14 @@ int get_relative_path(char *buf, char **relative_path)
 	return 0;
 }
 
+/**
+ * @brief This function copies the file name given in buf to the infile_name
+ *
+ * @param infile_name - the pointer where the name will be copied too
+ * @param buf - the file name that needs to be copied
+ * @return 0 - if the function finishes successfully
+ * 		   12 - if there is a memory problem
+ */
 int copy_file_name(char **infile_name, char *buf)
 {
 	(*infile_name) = (char *)malloc((strlen(buf) + 1) * sizeof(char));
@@ -457,6 +592,12 @@ int copy_file_name(char **infile_name, char *buf)
 	return 0;
 }
 
+/**
+ * @brief This function frees all the memory allocated for storing directory
+ * paths
+ * @param directory_list - the array of directory paths
+ * @param size - the size of the array
+ */
 void free_directory_list(char **directory_list, int size)
 {
 	if (size != 0) {
@@ -468,6 +609,15 @@ void free_directory_list(char **directory_list, int size)
 	}
 }
 
+/**
+ * @brief This function opens a file and returns the FILE* to it
+ *
+ * @param name - the path to the file that we want to open
+ * @param fd - FILE* of the file that was opened
+ * @param mode - the mode in which we want to open the file ("r" or "w+")
+ * @return -1 - if the file fails to open
+ * 		   0 - if the function finishes successfully
+ */
 int open_file(char *name, FILE **fd, char *mode)
 {
 	if (name != NULL) {
@@ -478,7 +628,14 @@ int open_file(char *name, FILE **fd, char *mode)
 	return 0;
 }
 
-int close_file(char *name, FILE *fd, char *relative_path)
+/**
+ * @brief This function closes a file, erases it's name and the relative path
+ *
+ * @param name - the path to the file that was opened
+ * @param fd - FILE* of the file
+ * @param relative_path - the relative path extracted and stored separatelly
+ */
+void close_file(char *name, FILE *fd, char *relative_path)
 {
 	if (name != NULL) {
 		if (relative_path != NULL)
@@ -486,5 +643,4 @@ int close_file(char *name, FILE *fd, char *relative_path)
 		free(name);
 		fclose(fd);
 	}
-	return 0;
 }

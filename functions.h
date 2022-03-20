@@ -4,7 +4,14 @@
 #include "hash_table.h"
 #endif
 
-int add_argument_mapping(char **argv, int *line, map * map);
+#define MAX_CMD_BUF_SIZE 256
+
+/*****************************************
+ *  ALL THE BRIEF EXPLANATIONS OF EACH   *
+ * FUNCTION ARE IN THE FUNCTIONS.C FILE. *
+ *****************************************/
+
+int add_argument_mapping(char **argv, int *line, map *map);
 
 int add_directory_path(char ***list, int *capacity, int *size, char *path);
 
@@ -19,4 +26,4 @@ void free_directory_list(char **directory_list, int size);
 
 int open_file(char *name, FILE **fd, char *mode);
 
-int close_file(char *name, FILE *fd, char *relative_path);
+void close_file(char *name, FILE *fd, char *relative_path);

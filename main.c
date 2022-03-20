@@ -38,39 +38,62 @@ int main(int argc, char **argv)
 				return_value = add_directory_path(
 				    &directory_list, &list_capacity,
 				    &list_entries, argv[i]);
+			/* If the argument is o and we don't already have an
+			 * outfile */
 			else if (argv[i][1] == 'o' && outfile == NULL)
+				/* Save the path to the outfile */
 				return_value =
 				    copy_file_name(&outfile, argv[i]);
+			/* Else return an error code, because we don't have
+			 * another options */
 			else
 				return 1;
+			/* If the argument isn't an option, check if we have a
+			 * path to an input file.  We can add a possible input
+			 * file, only if we don't already have one. */
 		} else if (infile == NULL) {
+			/* Get the relative path to the infile */
 			return_value =
 			    get_relative_path(argv[i], &relative_path);
-
+			/* Save the path to the infile */
 			if (return_value == 0)
 				return_value = copy_file_name(&infile, argv[i]);
+			/* If the argument isn't an option and we already have
+			 * an input file check if we have a path to an output
+			 * file.  We can add a possible input file, only if we
+			 * don't already have one. */
 		} else if (outfile == NULL)
 			return_value = copy_file_name(&outfile, argv[i]);
+		/* We don't have any types of arguments that haven't been
+		 * treated. Return 1 so that the program finishes. */
 		else
 			return 1;
 	}
 
+	/* After we analyzed all arguments, try to open the infile and outfile
+	 */
 	if (return_value == 0)
 		return_value = open_file(infile, &infd, "r");
 	if (return_value == 0)
 		return_value = open_file(outfile, &outfd, "w+");
 
+	/* Start to analyze the infile */
 	if (return_value == 0)
 		return_value = read_file(map, infd, outfd, directory_list,
 					 list_entries, relative_path);
+
+	/* Close the input file and output file */
 	close_file(infile, infd, relative_path);
 	close_file(outfile, outfd, NULL);
 
+	/* Free the memory allocated for the directory path list */
 	if (return_value == 0)
 		free_directory_list(directory_list, list_entries);
 
+	/* Free the memory allocated for the map */
 	if (return_value == 0)
 		map_destroy(map);
 
+	/* Return the exit code */
 	return return_value;
 }

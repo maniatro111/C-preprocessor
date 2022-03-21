@@ -6,10 +6,10 @@ Organizare:
     The logic is sequential. 
     Analyzing steps:
 
-        1. Firstly, read and interpred all the arguments given to the 
+        1. Firstly, read and interpret all the arguments given to the 
         executable:
             a. If the -D option is present, add that macro in the hashmap
-            b. If the -I option is present, add that path to the directoy
+            b. If the -I option is present, add that path to the directory
                into a string array.
             c. If the -o option is present, check that we don't already 
                have a path to an output file. If we don't already have one,
@@ -27,14 +27,14 @@ Organizare:
 
         3. Next step is analyzing the input file. I read the file line by line
         and interpret it as it should be. Two things here that I need to tell.
-        I have an int that I kinda use it as a boolean. If I have an if expression,
+        I have an int that I kinda use as a boolean. If I have an if expression,
         I analyze the expression and make the variable 0 or 1. If it is on 0, I 
         can't interpret the line that I read. If it is 1, I can. The else command,
         changes that value to the other. Another thing is, when I meet an include
         directive, I stop reading the current file, I try to search for that file that
         has to be included and start interpreting that new file.
 
-        4. After we finish to analyze the input file, try to close the input and 
+        4. After we finish analyzing the input file, try closing the input and 
         output file. Return 1 if a close fails.
 
         5. Free all the resources the we allocated for the executable.

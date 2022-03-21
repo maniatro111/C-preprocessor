@@ -98,7 +98,7 @@ static int search_for_key_and_copy(map *mp, char **value, int *start, int *end)
 		char *valoare;
 		char *copie;
 
-		/* Get the value that coresponds to the key */
+		/* Get the value that corresponds to the key */
 		valoare = map_get(mp, aux);
 		copie = (char *)calloc(
 		    (strlen(*value) - strlen(aux) + strlen(valoare) + 1),
@@ -124,7 +124,9 @@ static int search_for_key_and_copy(map *mp, char **value, int *start, int *end)
 		/* Replace the old string with the new one */
 		*value = copie;
 	} else
-		/* If is not in the map, modify the end of the word */
+		/* If the word is not in the map, jump it and move to the next
+		 */
+		/* one */
 		*end = *start + strlen(aux);
 	/* Free the aux string */
 	free(aux);
@@ -151,9 +153,9 @@ static int check_define_in_define(map *mp, char **value)
 	/* Iterate through the whole line till the end of it, or till we */
 	/* encounter a memory problem */
 	for (; end < strlen(*value) && return_value == 0; end++)
-		/* If we encounter one of the character in the list, that means
+		/* If we encounter one of the characters in the list, that means
 		 */
-		/* that we found th end of a word. Start analyzing it. */
+		/* that we found the end of a word. Start analyzing it. */
 		if (strchr("\t []{}<>=+-*/%!&|^.,:;()\\", (*value)[end]))
 			return_value =
 			    search_for_key_and_copy(mp, value, &start, &end);
@@ -235,7 +237,7 @@ static int insert_define_from_file(map *mp, char *buf, FILE *infd)
 		buf[strlen(buf) - 1] = '\0';
 		/* Loop and read lines till we find a line that doesn't end with
 		 */
-		/* \ anymore. That means that we finised reading the multi-line
+		/* \ anymore. That means that we finished reading the multi-line
 		 */
 		/* define */
 		while (buf[strlen(buf) - 1] == '\\') {
@@ -260,7 +262,7 @@ static int insert_define_from_file(map *mp, char *buf, FILE *infd)
 		}
 		/* For the last line of the define, elimitate all starting tabs
 		 */
-		/* and spaces, the copy it to the final value */
+		/* and spaces, then copy it to the final value */
 		eliminate_tabs_and_add_space(argumente_concatenate, buf);
 		mimi = (char *)malloc((strlen(aux) + 1) * sizeof(char));
 		if (mimi == NULL)
@@ -547,7 +549,7 @@ static int add_header_file(char *buf, char **directory_list, FILE *outfd,
 	strcpy(total_path, relative_path);
 	strcat(total_path, buf + 1);
 	infd = fopen(total_path, "r");
-	/* If it is, start to analyze it */
+	/* If it is, start analyzing it */
 	if (infd) {
 		return_value = read_file(map, infd, outfd, directory_list,
 					 directory_list_size, relative_path);
@@ -588,7 +590,8 @@ int read_file(map *map, FILE *infd, FILE *outfd, char **directory_list,
 	char buf[MAX_CMD_BUF_SIZE];
 	int return_value = 0;
 	/* This value is used to see if I can interpret the line that I read. */
-	/* When I am in a if/else block an I have to interpret only one of it */
+	/* When I am in an if/else block an I have to interpret only one of it
+	 */
 	/* this value will be 1 for the part that I have to interpret and 0 for
 	 */
 	/* the part that I cannot interpret. */

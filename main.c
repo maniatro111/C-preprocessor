@@ -45,7 +45,7 @@ int main(int argc, char **argv)
 				return_value =
 				    copy_file_name(&outfile, argv[i]);
 			/* Else return an error code, because we don't have */
-			/* another options */
+			/* other options */
 			else
 				return 1;
 			/* If the argument isn't an option, check if we have a

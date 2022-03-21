@@ -4,7 +4,7 @@
 #include <string.h>
 #ifndef HASH_TABLE
 #define HASH_TABLE 1
-#include "hash_table.h"
+#include "hash_map.h"
 #endif
 
 int main(int argc, char **argv)
@@ -87,8 +87,10 @@ int main(int argc, char **argv)
 					 list_entries, relative_path);
 
 	/* Close the input file and output file */
-	close_file(infile, infd, relative_path);
-	close_file(outfile, outfd, NULL);
+	if (return_value == 0)
+		close_file(infile, infd, relative_path);
+	if (return_value == 0)
+		close_file(outfile, outfd, NULL);
 
 	/* Free the memory allocated for the directory path list */
 	if (return_value == 0)

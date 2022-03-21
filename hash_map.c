@@ -2,7 +2,7 @@
 #include <string.h>
 #ifndef HASH_TABLE
 #define HASH_TABLE 1
-#include "hash_table.h"
+#include "hash_map.h"
 #endif
 
 #define INITIAL_CAPACITY 2
@@ -271,7 +271,7 @@ int map_set(map *mp, char *key, char *value)
 	/* If the number of entries in the map is greater than half of the*/
 	/* map capacity, try to expand the map */
 	if (mp->length >= mp->capacity / 2)
-		if (!map_expand(mp))
+		if (map_expand(mp) == 0)
 			return 12;
 	/*  Try to add the new entry */
 	return map_set_entry(mp->entries, mp->capacity, key, value,

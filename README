@@ -34,7 +34,8 @@ Organizare:
         directive, I stop reading the current file, I try to search for that file that
         has to be included and start interpreting that new file.
 
-        4. After we finish to analyze the input file, try to close the input and output file. Return 1 if a close fails.
+        4. After we finish to analyze the input file, try to close the input and 
+        output file. Return 1 if a close fails.
 
         5. Free all the resources the we allocated for the executable.
 
@@ -44,7 +45,8 @@ Organizare:
 	        char *key;
 	        char *value;
             } entry;
-        This is an entry in the map. It stores the key and value as a char* in the key and value field.
+        This is an entry in the map. It stores the key and value as a char* in 
+        the key and value field.
 
         2. Map:
             typedef struct map {
@@ -52,27 +54,33 @@ Organizare:
 	        unsigned long capacity;
 	        unsigned long length;
             } map;
-        This is the map data structure. It has an array of entries, which stores all entries of the hasmap.
-        The capacity field is used to know the maximum number of entries that the map can hold. I use it
-        to know when I have to expand the size of the entries array. The length field is used to know how many
-        entries I have in the map. When the length aproaches the capacity, that means that I have to resize the map.
+        This is the map data structure. It has an array of entries, which 
+        stores all entries of the hasmap. The capacity field is used to 
+        know the maximum number of entries that the map can hold. I use it to
+        know when I have to expand the size of the entries array. The length 
+        field is used to know how many entries I have in the map. When the 
+        length aproaches the capacity, that means that I have to resize the map.
 
     Considerations:
-        In my opinion, the homework was interesting, but very poorly explained. Many thing I've found out when
-    I started reading the checker.
-        I consider that my implementation is pretty good, but as always, it can be better, given more time. :)
+        In my opinion, the homework was interesting, but very poorly explained.
+    Many thing I've found out when I started reading the checker.
+        I consider that my implementation is pretty good, but as always, it 
+    can be better, given more time. :)
 
 Implementation:
 
-    The whole homework was solved. I don't really know if I have some extra functionalities implemented. I implemented as I thought was ok.
+    The whole homework was solved. I don't really know if I have some extra 
+    functionalities implemented. I implemented as I thought was ok.
     Some difficulties encountered were the checker understanding.
-    Some interesting things that I've found out is that a vector iteration character by character is always better than strstr. :)
+    Some interesting things that I've found out is that a vector iteration 
+    character by character is always better than strstr. :)
 
 How the homework compiles and runs?
     
     The homework compiles and runs as it was desired from the homework text.
     It compiles with the make command.
-    It runs as the homework text says. ./so-cpp or ./so-cpp.exe and the arguments needed
+    It runs as the homework text says. 
+    ./so-cpp or ./so-cpp.exe and the arguments needed
 
 Bibliography
     https://ocw.cs.pub.ro/courses/so/laboratoare/laborator-01
